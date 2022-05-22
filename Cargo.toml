@@ -1,0 +1,56 @@
+[package]
+name = "zkwork_aleo_worker"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+zkwork_aleo_protocol = {path = "../zkwork_aleo_protocol"}
+  [dependencies.tracing]
+  version = "0.1"
+
+  [dependencies.snarkvm]
+  version = "0.8.0"
+
+  [dependencies.anyhow]
+  version = "1"
+
+  [dependencies.tokio]
+  version = "1"
+  features = [
+  "io-util",
+  "macros",
+  "net",
+  "rt-multi-thread",
+  "signal",
+  "sync",
+  "time"
+  ]
+  [dependencies.tokio-util]
+  version = "0.7"
+  features = [ "codec" ]
+
+  [dependencies.structopt]
+  version = "0.3"
+
+  [dependencies.tokio-rustls]
+  version = "0.23.2"
+
+  [dependencies.tokio-stream]
+  version = "=0.1"
+
+  [dependencies.rustls-pemfile]
+  version = "0.3.0"
+
+  [dependencies.rayon]
+  version = "1"
+  [dependencies.num_cpus]
+  version = "1"
+
+  [dependencies.futures]
+  version = "0.3.21"
+  features = [ "thread-pool" ]
+
+  [dependencies.rand]
+  version = "0.8"
