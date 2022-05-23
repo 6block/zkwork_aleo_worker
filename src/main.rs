@@ -22,9 +22,8 @@ use futures::SinkExt;
 use rand::thread_rng;
 use zkwork_aleo_protocol::{
     environment::{Environment, SixPoolWorkerTrial},
-    node::initialize_logger,
-    message::Data,
-    poolmessage::{PoolMessageCS, PoolMessageSC},
+    log::initialize_logger,
+    message::{Data, PoolMessageCS, PoolMessageSC}
 };
 use snarkvm::dpc::{posw::PoSWProof, prelude::*, testnet2::Testnet2};
 use std::{
