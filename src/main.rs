@@ -23,10 +23,11 @@ use rand::thread_rng;
 use zkwork_aleo_protocol::{
     environment::{Environment, SixPoolWorkerTrial},
     log::initialize_logger,
-    message::{Data, PoolMessageCS, PoolMessageSC}
+    message::{Data, PoolMessageCS, PoolMessageSC},
 };
 use snarkvm::dpc::{posw::PoSWProof, prelude::*, testnet2::Testnet2};
 use std::{
+    any::Any,
     convert::TryFrom,
     fs::File,
     io::{self, BufReader},
@@ -34,7 +35,7 @@ use std::{
     net::SocketAddr,
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU8, Ordering},
         Arc,
     },
     time::Duration,
@@ -94,6 +95,9 @@ struct Worker {
     /// Specify the custom name of this worker instance.
     #[structopt(default_value = "sixworker", long = "custom_name")]
     pub custom_name: String,
+    /// Specify the parallel number of posw
+    #[structopt(default_value = "2", long = "parallel_num")]
+    pub parallel_num: u8,
 }
 
 impl Worker {
@@ -140,77 +144,118 @@ impl Worker {
         mut prover_handler: ProverHandler<N>,
     ) -> Result<()> {
         let (router, handler) = oneshot::channel();
+        let parallel_num = self.parallel_num;
+        let mut thread_pools = Vec::new();
+        for _ in 0..parallel_num {
+            let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
+                error!("{:?} - just skip", err);
+            };
+            thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
+                                    .stack_size(8 * 1024 *1024)
+                                    .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
+                                    .panic_handler(rayon_panic_handler)
+                                    .build()
+                                    .expect("Failed to initialize a thread pool for worker")
+                                    ));
+        }
         E::tasks().append(task::spawn(async move {
             let _ = router.send(());
             let mut terminator_previous = Arc::new(AtomicBool::new(false));
+            let running_posw_count = Arc::new(AtomicU8::new(0));
             loop {
+                debug!("tokio::select");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
                         ProverRequest::WorkerJob(share_difficulty, block_template) => {
                             let target_difficulty = block_template.difficulty_target();
-                            info!("WorkerJob share difficulty: {} difficulty target: {}", share_difficulty, target_difficulty);
-                            let net_router = net_router.clone();
                             //Terminate previous job
                             terminator_previous.store(true, Ordering::SeqCst);
                             let terminator = Arc::new(AtomicBool::new(false));
                             terminator_previous = terminator.clone();
-                            E::tasks().append(task::spawn(async move {
-                                loop {
-                                    let terminator_clone = terminator.clone();
-                                    let block_height = block_template.block_height();
-                                    let block_template = block_template.clone();
-                                    let previous_block_hash = block_template.previous_block_hash();
-                                    if terminator.load(Ordering::SeqCst) {
-                                        break;
-                                    }
-                                    let result = task::spawn_blocking(move || {
-                                        E::thread_pool().install(move || {
-                                            loop {
-                                                let block_header =
-                                                    BlockHeader::mine_once_unchecked(&block_template, &terminator_clone, &mut thread_rng())?;
-                                                // Ensure the share difficulty target is met.
-                                                if N::posw().verify(
-                                                    block_header.height(),
-                                                    share_difficulty,
-                                                    &[*block_header.to_header_root().unwrap(), *block_header.nonce()],
-                                                    block_header.proof(),
-                                                ) {
-                                                    return Ok::<(N::PoSWNonce, PoSWProof<N>, u64), anyhow::Error>((
-                                                        block_header.nonce(),
-                                                        block_header.proof().clone(),
-                                                        block_header.proof().to_proof_difficulty()?,
-                                                    ));
+                            info!("WorkerJob share difficulty: {} difficulty target: {}", share_difficulty, target_difficulty);
+                            loop {
+                                if running_posw_count.load(Ordering::Relaxed) == 0 {
+                                    break;
+                                }
+                                tokio::time::sleep(Duration::from_millis(10)).await;
+                            }
+                            for i in 0..parallel_num {
+                                let net_router = net_router.clone();
+                                let terminator = terminator.clone();
+                                let block_template = block_template.clone();
+                                let thread_pool = thread_pools[i as usize].clone();
+                                let running_posw_count = running_posw_count.clone();
+                                trace!("thread pool id {}", i);
+                                let (router, handler) = oneshot::channel();
+                                E::tasks().append(task::spawn(async move {
+                                    let _ = router.send(());
+                                    running_posw_count.fetch_add(1, Ordering::SeqCst);
+                                    tokio::time::sleep(Duration::from_millis(i as u64 * 200)).await;
+                                    loop {
+                                        let terminator_clone = terminator.clone();
+                                        let block_height = block_template.block_height();
+                                        let block_template = block_template.clone();
+                                        let previous_block_hash = block_template.previous_block_hash();
+                                        let thread_pool = thread_pool.clone();
+                                        if terminator.load(Ordering::SeqCst) {
+                                            trace!("posw {} terminator", i);
+                                            running_posw_count.fetch_sub(1, Ordering::SeqCst);
+                                            break;
+                                        }
+                                        let result = task::spawn_blocking(move || {
+                                            thread_pool.install(move || {
+                                                loop {
+                                                    //debug!("mine_one_unchecked");
+                                                    let block_header =
+                                                        BlockHeader::mine_once_unchecked(&block_template, &terminator_clone, &mut thread_rng())?;
+                                                    //debug!("mine_one_unchecked end");
+                                                    // Ensure the share difficulty target is met.
+                                                    if N::posw().verify(
+                                                        block_header.height(),
+                                                        share_difficulty,
+                                                        &[*block_header.to_header_root().unwrap(), *block_header.nonce()],
+                                                        block_header.proof(),
+                                                    ) {
+                                                        return Ok::<(N::PoSWNonce, PoSWProof<N>, u64), anyhow::Error>((
+                                                            block_header.nonce(),
+                                                            block_header.proof().clone(),
+                                                            block_header.proof().to_proof_difficulty()?,
+                                                        ));
+                                                    }
+                                                }
+                                            })
+                                        })
+                                        .await;
+                                        if terminator.load(Ordering::SeqCst) {
+                                            trace!("posw {} terminator", i);
+                                            running_posw_count.fetch_sub(1, Ordering::SeqCst);
+                                            break;
+                                        }
+                                        match result {
+                                            Ok(Ok((nonce, proof, proof_difficulty))) => {
+                                                debug!(
+                                                    "Prover successfully mined a share for unconfirmed block {} with proof difficulty of {}",
+                                                    block_height, proof_difficulty
+                                                );
+                                                if proof_difficulty <= target_difficulty {
+                                                    info!("Mined an Candidate block {} with proof difficulty {} target difficulty {}",
+                                                        block_height, proof_difficulty, target_difficulty
+                                                    );
+                                                }
+
+                                                // Send a `` to the operator.
+                                                let message = NetRequest::ShareBlock(address, nonce, previous_block_hash, Data::Object(proof));
+                                                if let Err(error) = net_router.send(message).await {
+                                                    error!("[ShareBlock] {}", error);
                                                 }
                                             }
-                                        })
-                                    })
-                                    .await;
-                                    if terminator.load(Ordering::SeqCst) {
-                                        break;
-                                    }
-                                    match result {
-                                        Ok(Ok((nonce, proof, proof_difficulty))) => {
-                                            debug!(
-                                                "Prover successfully mined a share for unconfirmed block {} with proof difficulty of {}",
-                                                block_height, proof_difficulty
-                                            );
-                                            if proof_difficulty <= target_difficulty {
-                                                info!("Mined an Candidate block {} with proof difficulty {} target difficulty {}",
-                                                    block_height, proof_difficulty, target_difficulty
-                                                );
-                                            }
-
-                                            // Send a `` to the operator.
-                                            let message = NetRequest::ShareBlock(address, nonce, previous_block_hash, Data::Object(proof));
-                                            if let Err(error) = net_router.send(message).await {
-                                                error!("[ShareBlock] {}", error);
-                                            }
+                                            Ok(Err(error)) => error!("{}", error),
+                                            Err(error) => error!("{}", anyhow!("Failed to mine the next block {}", error)),
                                         }
-                                        Ok(Err(error)) => error!("{}", error),
-                                        Err(error) => error!("{}", anyhow!("Failed to mine the next block {}", error)),
                                     }
-                                }
-                            }));
+                                }));
+                                let _ = handler.await;
+                            }
                         }
                         ProverRequest::TerminateJob => terminator_previous.store(true, Ordering::SeqCst),
                         ProverRequest::Exit => return,
@@ -264,6 +309,7 @@ impl Worker {
                     match request {
                         NetRequest::ShareBlock(address, nonce, previous_block_hash, proof) => {
                             let message = PoolMessageCS::ShareBlock(worker_id, address, nonce, previous_block_hash, proof);
+                            //info!("NetRequest ShareBlock");
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[ShareBlock] {}", error);
                             }
@@ -284,8 +330,11 @@ impl Worker {
                             PoolMessageSC::WorkerJob(share_difficulty, block_template) => {
                                 if let Ok(block_template) = block_template.deserialize().await {
                                     let request = ProverRequest::WorkerJob(share_difficulty, block_template);
+                                    info!("WorkerJob");
                                     if let Err(error) = prover_router.send(request).await {
                                         error!("[WOrkerJob] {}", error);
+                                    } else {
+                                        debug!("WorkerJob ok");
                                     }
                                 }
                             }
@@ -460,12 +509,12 @@ fn main() -> Result<()> {
     let worker = Worker::from_args();
     initialize_logger(worker.verbosity, None);
     info!("worker start.");
-    let (num_tokio_worker_threads, max_tokio_blocking_threads) = (num_cpus::get(), 512); // 512 is tokio's current default
+    let (num_tokio_worker_threads, max_tokio_blocking_threads) = (num_cpus::get(), 1024); // 512 is tokio's current default
 
     // Initialize the runtime configuration.
     let runtime = runtime::Builder::new_multi_thread()
         .enable_all()
-        .thread_stack_size(8 * 1024 * 1024)
+        .thread_stack_size(16 * 1024 * 1024)
         .worker_threads(num_tokio_worker_threads)
         .max_blocking_threads(max_tokio_blocking_threads)
         .build()?;
