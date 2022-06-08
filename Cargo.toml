@@ -59,3 +59,31 @@ edition = "2021"
 
   [dependencies.rand]
   version = "0.8"
+
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+incremental = true
+
+[profile.bench]
+opt-level = 3
+debug = false
+rpath = false
+lto = "thin"
+incremental = true
+debug-assertions = false
+
+[profile.dev]
+opt-level = 3
+lto = "thin"
+incremental = true
+debug-assertions = false
+
+[profile.test]
+opt-level = 3
+lto = "thin"
+incremental = true
+debug = true
+debug-assertions = true
+
