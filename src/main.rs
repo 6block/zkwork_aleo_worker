@@ -1,18 +1,13 @@
-// Copyright (C) 2019-2021 Aleo Systems Inc.
-// This file is part of the snarkOS library.
+// Copyright (C) 2019-2022 6block.
+// This file is the zk.work pool client for Aleo.
 
-// The snarkOS library is free software: you can redistribute it and/or modify
+// The zkwork_aleo_worker  is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// The snarkOS library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 // You should have received a copy of the GNU General Public License
-// along with the snarkOS library. If not, see <https://www.gnu.org/licenses/>.
+// along with the zkwork_aleo_protocol library. If not, see <https://www.gnu.org/licenses/>.
 
 #[macro_use]
 extern crate tracing;
@@ -20,12 +15,12 @@ extern crate tracing;
 use anyhow::{anyhow, Result};
 use futures::SinkExt;
 use rand::thread_rng;
-use zkwork_aleo_protocol::{
-    environment::{Environment, SixPoolWorkerTrial},
-    log::initialize_logger,
-    message::{Data, PoolMessageCS, PoolMessageSC},
-};
 use snarkvm::dpc::{posw::PoSWProof, prelude::*, testnet2::Testnet2};
+use snarkos::{
+        environment::Environment,
+        initialize_logger,
+        message::Data,
+    };
 use std::{
     any::Any,
     convert::TryFrom,
@@ -58,6 +53,10 @@ use tokio_rustls::{
 };
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite};
+use zkwork_aleo_protocol::{
+        environment::SixPoolWorkerTrial,
+        message::{PoolMessageCS, PoolMessageSC},
+    };
 
 type ProverRouter<N> = mpsc::Sender<ProverRequest<N>>;
 type ProverHandler<N> = mpsc::Receiver<ProverRequest<N>>;
