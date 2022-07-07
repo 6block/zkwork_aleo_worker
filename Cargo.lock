@@ -3024,9 +3024,9 @@ dependencies = [
 
 [[package]]
 name = "zkwork_aleo_protocol"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb72a39c1aa1d7a89fea58feeb146b986a5bf5467b9b97e42a4dbf5aa310ff0c"
+checksum = "8215aba438962df3d725720191e24d94abd9379d1cc98ad431de3a22a6637761"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3050,7 +3050,7 @@ dependencies = [
 
 [[package]]
 name = "zkwork_aleo_worker"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "futures",
