@@ -97,6 +97,21 @@ struct Worker {
     /// Specify the parallel number of posw
     #[structopt(default_value = "2", long = "parallel_num")]
     pub parallel_num: u8,
+
+    #[structopt(verbatim_doc_comment)]
+    /// Indexes of GPUs to use (starts from 0)
+    /// Specify multiple times to use multiple GPUs
+    /// Example: -g 0 -g 1 -g 2
+    /// Note: Pure CPU proving will be disabled as each GPU job requires one CPU thread as well
+    #[structopt(short = "g", long = "cuda")]
+    pub cuda: Option<Vec<i16>>,
+
+    #[structopt(verbatim_doc_comment)]
+    /// Parallel jobs per GPU, defaults to 1
+    /// Example: -g 0 -g 1 -j 4
+    /// The above example will result in 8 jobs in total
+    #[structopt(short = "j", long = "cuda-jobs")]
+    pub jobs: Option<u8>,
 }
 
 impl Worker {
@@ -145,18 +160,42 @@ impl Worker {
         let (router, handler) = oneshot::channel();
         let parallel_num = self.parallel_num;
         let mut thread_pools = Vec::new();
-        for _ in 0..parallel_num {
-            let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
-                error!("{:?} - just skip", err);
-            };
-            thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
-                                    .stack_size(8 * 1024 *1024)
-                                    .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
-                                    .panic_handler(rayon_panic_handler)
-                                    .build()
-                                    .expect("Failed to initialize a thread pool for worker")
-                                    ));
+        if self.cuda.clone().is_none() {
+            info!("cuda.is_none {:?}", self.cuda.clone().is_none());
+            for _ in 0..parallel_num {
+                let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
+                    error!("{:?} - just skip", err);
+                };
+                thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
+                                        .stack_size(8 * 1024 *1024)
+                                        .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
+                                        .panic_handler(rayon_panic_handler)
+                                        .build()
+                                        .expect("Failed to initialize a thread pool for worker using cpu")
+                                        ));
+            }
+        } else {
+            info!("cuda {:?} cuda_jobs {:?}", self.cuda.clone(), self.jobs.clone().unwrap_or(1));
+            let total_jobs = self.jobs.clone().unwrap_or(1) * self.cuda.clone().unwrap().len() as u8;
+            for index in 0..total_jobs {
+                let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
+                    error!("{:?} - just skip", err);
+                };
+                thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
+                                        .stack_size(8 * 1024 *1024)
+                                        .num_threads(2)
+                                        .panic_handler(rayon_panic_handler)
+                                        .thread_name(move |idx| format!("ap-cuda-{}-{}", index, idx))
+                                        .build()
+                                        .expect("Failed to initialize a thread pool for worker using cuda")
+                                        ));
+            }
         }
+        info!(
+            "Created {} prover thread pools and using cuda is {}",
+            thread_pools.len(),
+            self.cuda.clone().is_some(),
+        );
         E::tasks().append(task::spawn(async move {
             let _ = router.send(());
             let mut terminator_previous = Arc::new(AtomicBool::new(false));
@@ -178,7 +217,7 @@ impl Worker {
                                 }
                                 tokio::time::sleep(Duration::from_millis(10)).await;
                             }
-                            for i in 0..parallel_num {
+                            for i in 0..thread_pools.len() {
                                 let net_router = net_router.clone();
                                 let terminator = terminator.clone();
                                 let block_template = block_template.clone();
@@ -517,15 +556,6 @@ fn main() -> Result<()> {
         .worker_threads(num_tokio_worker_threads)
         .max_blocking_threads(max_tokio_blocking_threads)
         .build()?;
-
-    let num_rayon_cores_global = num_cpus::get();
-
-    // Initialize the parallelization parameters.
-    rayon::ThreadPoolBuilder::new()
-        .stack_size(8 * 1024 * 1024)
-        .num_threads(num_rayon_cores_global)
-        .build_global()
-        .unwrap();
 
     runtime.block_on(async move {
         worker

@@ -61,6 +61,8 @@ license = "GPL-3.0"
   [dependencies.rand]
   version = "0.8"
 
+[features]
+enable-cuda = ["snarkvm/cuda"]
 
 [profile.release]
 opt-level = 3
