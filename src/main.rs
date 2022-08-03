@@ -30,11 +30,12 @@ use std::{
     net::SocketAddr,
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, AtomicU8, Ordering},
+        atomic::{AtomicBool, AtomicU8, AtomicU32, Ordering},
         Arc,
     },
     time::Duration,
 };
+use std::collections::VecDeque;
 use structopt::StructOpt;
 use tokio::{
     io::{split, AsyncRead, AsyncWrite},
@@ -196,6 +197,8 @@ impl Worker {
             thread_pools.len(),
             self.cuda.clone().is_some(),
         );
+        let total_shares = Arc::new(AtomicU32::new(0));
+        let total_shares_get = total_shares.clone();
         E::tasks().append(task::spawn(async move {
             let _ = router.send(());
             let mut terminator_previous = Arc::new(AtomicBool::new(false));
@@ -223,6 +226,7 @@ impl Worker {
                                 let block_template = block_template.clone();
                                 let thread_pool = thread_pools[i as usize].clone();
                                 let running_posw_count = running_posw_count.clone();
+                                let total_shares_get = total_shares_get.clone();
                                 trace!("thread pool id {}", i);
                                 let (router, handler) = oneshot::channel();
                                 E::tasks().append(task::spawn(async move {
@@ -286,6 +290,7 @@ impl Worker {
                                                 if let Err(error) = net_router.send(message).await {
                                                     error!("[ShareBlock] {}", error);
                                                 }
+                                                total_shares_get.fetch_add(1, Ordering::SeqCst);
                                             }
                                             Ok(Err(error)) => error!("{}", error),
                                             Err(error) => error!("{}", anyhow!("Failed to mine the next block {}", error)),
@@ -301,8 +306,46 @@ impl Worker {
                 }
             }
         }));
+
+        self.print_hash_rate(total_shares.clone()).await;
+
         let _ = handler.await;
         Ok(())
+    }
+
+    pub async fn print_hash_rate(&self, total_shares_cal: Arc<AtomicU32>) {
+        task::spawn(async move {
+            fn calculate_hash_rate(now: u32, past: u32, interval: u32) -> Box<str> {
+                if interval < 1 {
+                    return Box::from("---");
+                }
+                if now <= past || past == 0 {
+                    return Box::from("---");
+                }
+                let rate = (now - past) as f64 / (interval * 60) as f64;
+                Box::from(format!("{:.2}", rate))
+            }
+            let mut log = VecDeque::<u32>::from(vec![0; 60]);
+            loop {
+                tokio::time::sleep(Duration::from_secs(60)).await;
+                let shares = total_shares_cal.load(Ordering::SeqCst);
+                log.push_back(shares);
+                let m1 = *log.get(59).unwrap_or(&0);
+                let m5 = *log.get(55).unwrap_or(&0);
+                let m15 = *log.get(45).unwrap_or(&0);
+                let m30 = *log.get(30).unwrap_or(&0);
+                let m60 = log.pop_front().unwrap_or_default();
+                info!(
+                    "Total shares: {} (1m: {} H/s, 5m: {} H/s, 15m: {} H/s, 30m: {} H/s, 60m: {} H/s)",
+                    shares,
+                    calculate_hash_rate(shares, m1, 1),
+                    calculate_hash_rate(shares, m5, 5),
+                    calculate_hash_rate(shares, m15, 15),
+                    calculate_hash_rate(shares, m30, 30),
+                    calculate_hash_rate(shares, m60, 60),
+                );
+            }
+        });
     }
 
     pub async fn io_message_process_loop<N: Network, E: Environment, T: AsyncRead + AsyncWrite>(
