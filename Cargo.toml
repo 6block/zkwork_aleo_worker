@@ -1,6 +1,6 @@
 [package]
 name = "zkwork_aleo_worker"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 license = "GPL-3.0"
 
@@ -8,7 +8,7 @@ license = "GPL-3.0"
 
 [dependencies]
   [dependencies.zkwork_aleo_protocol]
-  version = "0.2.1"
+  version = "0.3.0"
 
   [dependencies.tracing]
   version = "0.1"
@@ -17,7 +17,7 @@ license = "GPL-3.0"
   version = "2.0.2"
 
   [dependencies.snarkvm]
-  version = "0.8.0"
+  version = "0.9.5"
 
   [dependencies.anyhow]
   version = "1"
@@ -47,7 +47,7 @@ license = "GPL-3.0"
   version = "=0.1"
 
   [dependencies.rustls-pemfile]
-  version = "0.3.0"
+  version = "1.0.1"
 
   [dependencies.rayon]
   version = "1"
