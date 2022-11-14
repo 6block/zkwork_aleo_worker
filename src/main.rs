@@ -201,7 +201,7 @@ impl Worker {
             let mut terminator_previous = Arc::new(AtomicBool::new(false));
             let running_posw_count = Arc::new(AtomicU8::new(0)); // todo rename
             loop {
-                debug!("tokio::select");
+                info!("tokio::select before start_prover_process");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
                         ProverRequest::Notify(job_id, target, epoch_challenge) => {
@@ -247,13 +247,14 @@ impl Worker {
                                                     info!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
                                                     epoch_challenge.epoch_number(), job_id, target,);
 
-                                                    let coinbase_puzzle = CoinbasePuzzle::<N>::load();//?;
+                                                    let coinbase_puzzle = CoinbasePuzzle::<N>::load();
 
                                                     // Construct a prover solution.
-                                                    let prover_solution = match coinbase_puzzle.expect("REASON").prove(//tbd
+                                                    let prover_solution = match coinbase_puzzle.unwrap().prove(//tbd
                                                         &epoch_challenge,
                                                         address,
                                                         rand::thread_rng().gen(),
+                                                        Some(target),
                                                     ) {
                                                         Ok(proof) => proof,
                                                         Err(error) => {
@@ -385,18 +386,20 @@ impl Worker {
         };
 
         loop {
+            info!("tokio::select before io_message_process_loop"); //delete later todo
             tokio::select! {
                 Some(request) = net_handler.recv() => {
                     match request {
                         NetRequest::Submit(job_id, address, prover_solution) => {
                             let message = PoolMessageCS::Submit(worker_id, job_id, address, prover_solution);
-                            //info!("NetRequest ShareBlock");
+                            info!("NetRequest Submit"); //delete later todo
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Submit to Pool Server] {}", error);
                             }
                         }
                         NetRequest::Exit => {
                             let message = PoolMessageCS::DisConnect(worker_id);
+                            info!("NetRequest Exit"); //delete later todo
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Disconnect] {}", error);
                             }
@@ -432,7 +435,7 @@ impl Worker {
                 }
             }
         }
-
+        info!("Before Prover_router.send(ProverRequest::TerminateJob)"); //delete later todo
         // Lost link to pool， Terminate current Job
         let _ = prover_router.send(ProverRequest::TerminateJob).await;
 
