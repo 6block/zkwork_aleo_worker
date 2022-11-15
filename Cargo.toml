@@ -7,13 +7,19 @@ license = "GPL-3.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[dependencies.bytes]
+version = "1.0.0"
+
   [dependencies.zkwork_aleo_protocol]
-  version = "0.3.0"
+  #path = "/Users/johnnyfeng/Code/aleo/6lib/zkwork_aleo_protocol"
+  version = "0.3.1"
 
   [dependencies.tracing]
   version = "0.1"
 
   [dependencies.snarkos]
+  #path = "/Users/johnnyfeng/Code/aleo/officialALeoHQ/testnet3.2/snarkOS"
   version = "2.0.2"
 
   [dependencies.snarkvm]
@@ -23,7 +29,7 @@ license = "GPL-3.0"
   version = "1"
 
   [dependencies.tokio]
-  version = "1"
+  version = "1.21"
   features = [
   "io-util",
   "macros",

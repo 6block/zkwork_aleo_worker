@@ -11,13 +11,11 @@
 
 #[macro_use]
 extern crate tracing;
-
 use anyhow::{anyhow, Result};
 use futures::SinkExt;
 use snarkvm::{prelude::*};
 use snarkos::{
         initialize_logger,
-        message::Data,
     };
 use std::{
     any::Any,
@@ -52,7 +50,7 @@ use tokio_rustls::{
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite};
 use zkwork_aleo_protocol::{
-        message::{PoolMessageCS, PoolMessageSC},
+        message::{PoolMessageCS, PoolMessageSC, Data},
     };
 
 type ProverRouter<N> = mpsc::Sender<ProverRequest<N>>;
@@ -61,7 +59,7 @@ type NetRouter<N> = mpsc::Sender<NetRequest<N>>;
 type NetHandler<N> = mpsc::Receiver<NetRequest<N>>;
 #[derive(Debug)]
 pub enum ProverRequest<N: Network> {
-    Notify(u64, u64, EpochChallenge<N>),
+    Notify(u64, u64, EpochChallenge<N>, Address<N>),
     TerminateJob,
     Exit,
 }
@@ -70,6 +68,7 @@ pub enum NetRequest<N: Network> {
     Submit(u64, Address<N>, Data<ProverSolution<N>>),
     Exit,
 }
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "worker", author = "The Aleo Team <hello@aleo.org>", setting = structopt::clap::AppSettings::ColoredHelp)]
 struct Worker {
@@ -117,7 +116,7 @@ impl Worker {
         let address = match self.address {
             Some(ref address) => {
                 let address = Address::<N>::from_str(address)?;
-                info!("Worker address is {}.\n", address);
+                info!("Worker address is {}\n", address);
                 Some(address)
             }
             None => None,
@@ -204,12 +203,12 @@ impl Worker {
                 info!("tokio::select before start_prover_process");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
-                        ProverRequest::Notify(job_id, target, epoch_challenge) => {
+                        ProverRequest::Notify(job_id, target, epoch_challenge, pool_address) => {
                             //Terminate previous job
                             terminator_previous.store(true, Ordering::SeqCst);
                             let terminator = Arc::new(AtomicBool::new(false));
                             terminator_previous = terminator.clone();
-                            info!("Nofify from Pool Server, job_id: {} target: {}, epoch_challenge: {}", job_id, target, epoch_challenge.epoch_number());
+                            info!("Nofify from Pool Server, job_id: {} target: {}, epoch_number: {}", job_id, target, epoch_challenge.epoch_number());
                             loop {
                                 if running_posw_count.load(Ordering::Relaxed) == 0 {
                                     break;
@@ -242,17 +241,18 @@ impl Worker {
                                             break;
                                         }
                                         // let result = task::spawn_blocking(move || {
-                                        //     thread_pool.install(move || {
+                                            //  thread_pool.install(move || {
                                                 loop {
+                                                    tokio::time::sleep(Duration::from_millis(i as u64 * 1000)).await;
                                                     info!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
                                                     epoch_challenge.epoch_number(), job_id, target,);
 
                                                     let coinbase_puzzle = CoinbasePuzzle::<N>::load();
 
                                                     // Construct a prover solution.
-                                                    let prover_solution = match coinbase_puzzle.unwrap().prove(//tbd
+                                                    let prover_solution = match coinbase_puzzle.unwrap().prove(
                                                         &epoch_challenge,
-                                                        address,
+                                                        pool_address,
                                                         rand::thread_rng().gen(),
                                                         Some(target),
                                                     ) {
@@ -276,14 +276,12 @@ impl Worker {
                                                     match prover_solution_target >= target {
                                                         true => {
                                                             info!("Found a Solution (Proof Target {}, Target {})",prover_solution_target, target);
-
                                                             // Send solution to the pool server.
                                                             let message = NetRequest::Submit(job_id, address, Data::Object(prover_solution));
                                                             if let Err(error) = net_router.send(message).await {
                                                                 error!("[Submit to Pool Server] {}", error);
                                                             }
                                                             total_shares_get.fetch_add(1, Ordering::SeqCst);
-
                                                             break;
                                                         }
                                                         false => trace!(
@@ -363,15 +361,15 @@ impl Worker {
             error!("[Connect pool] {}", error);
             return Ok(());
         }
-        let worker_id = match outbound_socket_r.next().await {
+        let (worker_id, pool_address) = match outbound_socket_r.next().await {
             Some(Ok(message)) => match message {
-                PoolMessageSC::ConnectAck(false, address, _worker_id) => { // todo address. TBD
+                PoolMessageSC::ConnectAck(false, _address, _worker_id) => {
                     error!("connect pool error, server rejected.");
                     return Ok(());
                 }
                 PoolMessageSC::ConnectAck(true, address, worker_id) => {
-                    info!("connect pool success, my worker id: {:?}", worker_id);
-                    worker_id.unwrap()
+                    info!("connect pool success, my worker id: {:?}, {}", worker_id, address);
+                    (worker_id.unwrap(), address)
                 }
                 _ => {
                     error!("connect pool error, unexpected response message");
@@ -386,20 +384,20 @@ impl Worker {
         };
 
         loop {
-            info!("tokio::select before io_message_process_loop"); //delete later todo
+            info!("tokio::select before io_message_process_loop");
             tokio::select! {
                 Some(request) = net_handler.recv() => {
                     match request {
                         NetRequest::Submit(job_id, address, prover_solution) => {
+                            info!("NetRequest Submit, job_id {}, address {} ", job_id, address);
                             let message = PoolMessageCS::Submit(worker_id, job_id, address, prover_solution);
-                            info!("NetRequest Submit"); //delete later todo
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Submit to Pool Server] {}", error);
                             }
                         }
                         NetRequest::Exit => {
+                            info!("NetRequest Exit");
                             let message = PoolMessageCS::DisConnect(worker_id);
-                            info!("NetRequest Exit"); //delete later todo
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Disconnect] {}", error);
                             }
@@ -412,12 +410,11 @@ impl Worker {
                     Some(Ok(message)) => {
                         match message {
                             PoolMessageSC::Notify(job_id, target, epoch_challenge) => {
-                                let request = ProverRequest::Notify(job_id, target, epoch_challenge);
-                                info!("Notify from Pool Server");
+                                let request = ProverRequest::Notify(job_id, target, epoch_challenge, pool_address);
                                 if let Err(error) = prover_router.send(request).await {
                                     error!("[Notify from Pool Server] {}", error);
                                 } else {
-                                    debug!("Notify from Pool Server ok");
+                                    debug!("Notify from Pool Server OK, job_id:{}, target:{}", job_id, target);
                                 }
                             }
                             PoolMessageSC::ShutDown => {
@@ -435,7 +432,6 @@ impl Worker {
                 }
             }
         }
-        info!("Before Prover_router.send(ProverRequest::TerminateJob)"); //delete later todo
         // Lost link to pool， Terminate current Job
         let _ = prover_router.send(ProverRequest::TerminateJob).await;
 
