@@ -12,14 +12,12 @@ license = "GPL-3.0"
 version = "1.0.0"
 
   [dependencies.zkwork_aleo_protocol]
-  #path = "/Users/johnnyfeng/Code/aleo/6lib/zkwork_aleo_protocol"
   version = "0.3.1"
 
   [dependencies.tracing]
   version = "0.1"
 
   [dependencies.snarkos]
-  #path = "/Users/johnnyfeng/Code/aleo/officialALeoHQ/testnet3.2/snarkOS"
   version = "2.0.2"
 
   [dependencies.snarkvm]

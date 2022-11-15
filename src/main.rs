@@ -25,7 +25,7 @@ use std::{
     net::SocketAddr,
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, AtomicU8, AtomicU32, Ordering},
+        atomic::{AtomicU32, Ordering},
         Arc,
     },
     time::Duration,
@@ -60,7 +60,6 @@ type NetHandler<N> = mpsc::Receiver<NetRequest<N>>;
 #[derive(Debug)]
 pub enum ProverRequest<N: Network> {
     Notify(u64, u64, EpochChallenge<N>, Address<N>),
-    TerminateJob,
     Exit,
 }
 
@@ -197,53 +196,31 @@ impl Worker {
 
         task::spawn(async move {
             let _ = router.send(());
-            let mut terminator_previous = Arc::new(AtomicBool::new(false));
-            let running_posw_count = Arc::new(AtomicU8::new(0)); // todo rename
             loop {
                 info!("tokio::select before start_prover_process");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
                         ProverRequest::Notify(job_id, target, epoch_challenge, pool_address) => {
-                            //Terminate previous job
-                            terminator_previous.store(true, Ordering::SeqCst);
-                            let terminator = Arc::new(AtomicBool::new(false));
-                            terminator_previous = terminator.clone();
                             info!("Nofify from Pool Server, job_id: {} target: {}, epoch_number: {}", job_id, target, epoch_challenge.epoch_number());
-                            loop {
-                                if running_posw_count.load(Ordering::Relaxed) == 0 {
-                                    break;
-                                }
-                                tokio::time::sleep(Duration::from_millis(10)).await;
-                            }
                             for i in 0..thread_pools.len() {
                                 let net_router = net_router.clone();
-                                let terminator = terminator.clone();
 
                                 let epoch_challenge = epoch_challenge.clone();
                                 let thread_pool = thread_pools[i as usize].clone();
-                                let running_posw_count = running_posw_count.clone();
                                 let total_shares_get = total_shares_get.clone();
                                 trace!("thread pool id {}", i);
                                 let (router, handler) = oneshot::channel();
 
                                 task::spawn(async move {
                                     let _ = router.send(());
-                                    running_posw_count.fetch_add(1, Ordering::SeqCst);
                                     tokio::time::sleep(Duration::from_millis(i as u64 * 200)).await;
                                     loop {
-                                        let terminator_clone = terminator.clone();
-
                                         let epoch_challenge = epoch_challenge.clone();
-                                        let thread_pool = thread_pool.clone();
-                                        if terminator.load(Ordering::SeqCst) {
-                                            trace!("posw {} terminator", i);
-                                            running_posw_count.fetch_sub(1, Ordering::SeqCst);
-                                            break;
-                                        }
+                                        let _thread_pool = thread_pool.clone();
                                         // let result = task::spawn_blocking(move || {
                                             //  thread_pool.install(move || {
                                                 loop {
-                                                    tokio::time::sleep(Duration::from_millis(i as u64 * 1000)).await;
+                                                    tokio::time::sleep(Duration::from_millis(i as u64 * 500)).await;
                                                     info!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
                                                     epoch_challenge.epoch_number(), job_id, target,);
 
@@ -289,17 +266,11 @@ impl Worker {
                                                         ),
                                                     }
                                                 }
-                                        if terminator.load(Ordering::SeqCst) {
-                                            trace!("posw {} terminator", i);
-                                            running_posw_count.fetch_sub(1, Ordering::SeqCst);
-                                            break;
-                                        }
                                     }
                                 });
                                 let _ = handler.await;
                             }
                         }
-                        ProverRequest::TerminateJob => terminator_previous.store(true, Ordering::SeqCst),
                         ProverRequest::Exit => return,
                     }
                 }
@@ -432,8 +403,6 @@ impl Worker {
                 }
             }
         }
-        // Lost link to pool， Terminate current Job
-        let _ = prover_router.send(ProverRequest::TerminateJob).await;
 
         Ok(())
     }
