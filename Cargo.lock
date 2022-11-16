@@ -4227,12 +4227,12 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "bytes",
+ "crossterm 0.25.0",
  "futures",
  "num_cpus",
  "rand",
  "rayon",
  "rustls-pemfile",
- "snarkos",
  "snarkvm 0.9.6",
  "structopt",
  "tokio",
@@ -4240,5 +4240,6 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
+ "tracing-subscriber",
  "zkwork_aleo_protocol",
 ]

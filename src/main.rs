@@ -12,11 +12,10 @@
 #[macro_use]
 extern crate tracing;
 use anyhow::{anyhow, Result};
+use crossterm::tty::IsTty;
 use futures::SinkExt;
-use snarkvm::{prelude::*};
-use snarkos::{
-        initialize_logger,
-    };
+use snarkvm::prelude::*;
+use std::collections::VecDeque;
 use std::{
     any::Any,
     convert::TryFrom,
@@ -25,18 +24,16 @@ use std::{
     net::SocketAddr,
     str::FromStr,
     sync::{
-        atomic::{AtomicU32, Ordering},
+        atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering},
         Arc,
     },
     time::Duration,
 };
-use std::collections::VecDeque;
 use structopt::StructOpt;
 use tokio::{
     io::{split, AsyncRead, AsyncWrite},
     net::TcpStream,
-    runtime,
-    signal,
+    runtime, signal,
     sync::{mpsc, oneshot},
     task,
     time::timeout,
@@ -44,14 +41,11 @@ use tokio::{
 use tokio_rustls::{
     client::TlsStream,
     rustls::{self, OwnedTrustAnchor},
-    webpki,
-    TlsConnector,
+    webpki, TlsConnector,
 };
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite};
-use zkwork_aleo_protocol::{
-        message::{PoolMessageCS, PoolMessageSC, Data},
-    };
+use zkwork_aleo_protocol::message::{Data, PoolMessageCS, PoolMessageSC};
 
 type ProverRouter<N> = mpsc::Sender<ProverRequest<N>>;
 type ProverHandler<N> = mpsc::Receiver<ProverRequest<N>>;
@@ -60,6 +54,7 @@ type NetHandler<N> = mpsc::Receiver<NetRequest<N>>;
 #[derive(Debug)]
 pub enum ProverRequest<N: Network> {
     Notify(u64, u64, EpochChallenge<N>, Address<N>),
+    TerminateJob,
     Exit,
 }
 
@@ -69,7 +64,7 @@ pub enum NetRequest<N: Network> {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "worker", author = "The Aleo Team <hello@aleo.org>", setting = structopt::clap::AppSettings::ColoredHelp)]
+#[structopt(name = "worker", author = "The zk.work team <zk.work@6block.com>", setting = structopt::clap::AppSettings::ColoredHelp)]
 struct Worker {
     /// Specify this as a mining node, with the given miner address.
     #[structopt(long = "address")]
@@ -128,11 +123,19 @@ impl Worker {
                     .await?;
 
                 if self.ssl {
-                    self.start_pool_ssl_client::<N>(self.ssl_servers.clone(), prover_router.clone(), net_handler)
-                        .await?;
+                    self.start_pool_ssl_client::<N>(
+                        self.ssl_servers.clone(),
+                        prover_router.clone(),
+                        net_handler,
+                    )
+                    .await?;
                 } else {
-                    self.start_pool_tcp_client::<N>(self.tcp_servers.clone(), prover_router.clone(), net_handler)
-                        .await?;
+                    self.start_pool_tcp_client::<N>(
+                        self.tcp_servers.clone(),
+                        prover_router.clone(),
+                        net_handler,
+                    )
+                    .await?;
                 }
 
                 handle_signals((prover_router, net_router));
@@ -161,29 +164,36 @@ impl Worker {
                 let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
                     error!("{:?} - just skip", err);
                 };
-                thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
-                                        .stack_size(8 * 1024 *1024)
-                                        .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
-                                        .panic_handler(rayon_panic_handler)
-                                        .build()
-                                        .expect("Failed to initialize a thread pool for worker using cpu")
-                                        ));
+                thread_pools.push(Arc::new(
+                    rayon::ThreadPoolBuilder::new()
+                        .stack_size(8 * 1024 * 1024)
+                        .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
+                        .panic_handler(rayon_panic_handler)
+                        .build()
+                        .expect("Failed to initialize a thread pool for worker using cpu"),
+                ));
             }
         } else {
-            info!("cuda {:?} cuda_jobs {:?}", self.cuda.clone(), self.jobs.clone().unwrap_or(1));
-            let total_jobs = self.jobs.clone().unwrap_or(1) * self.cuda.clone().unwrap().len() as u8;
+            info!(
+                "cuda {:?} cuda_jobs {:?}",
+                self.cuda.clone(),
+                self.jobs.clone().unwrap_or(1)
+            );
+            let total_jobs =
+                self.jobs.clone().unwrap_or(1) * self.cuda.clone().unwrap().len() as u8;
             for index in 0..total_jobs {
                 let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
                     error!("{:?} - just skip", err);
                 };
-                thread_pools.push(Arc::new(rayon::ThreadPoolBuilder::new()
-                                        .stack_size(8 * 1024 *1024)
-                                        .num_threads(2)
-                                        .panic_handler(rayon_panic_handler)
-                                        .thread_name(move |idx| format!("ap-cuda-{}-{}", index, idx))
-                                        .build()
-                                        .expect("Failed to initialize a thread pool for worker using cuda")
-                                        ));
+                thread_pools.push(Arc::new(
+                    rayon::ThreadPoolBuilder::new()
+                        .stack_size(8 * 1024 * 1024)
+                        .num_threads(2)
+                        .panic_handler(rayon_panic_handler)
+                        .thread_name(move |idx| format!("ap-cuda-{}-{}", index, idx))
+                        .build()
+                        .expect("Failed to initialize a thread pool for worker using cuda"),
+                ));
             }
         }
         info!(
@@ -191,99 +201,122 @@ impl Worker {
             thread_pools.len(),
             self.cuda.clone().is_some(),
         );
-        let total_shares = Arc::new(AtomicU32::new(0));
-        let total_shares_get = total_shares.clone();
+        let total_solutions = Arc::new(AtomicU32::new(0));
+        let total_solutions_get = total_solutions.clone();
+
+        let coinbase_puzzle = CoinbasePuzzle::<N>::load().unwrap();
 
         task::spawn(async move {
             let _ = router.send(());
+            let mut pre_terminator = Arc::new(AtomicBool::new(false));
+            let in_process_count = Arc::new(AtomicU8::new(0));
             loop {
-                info!("tokio::select before start_prover_process");
+                debug!("tokio::select before start_prover_process");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
                         ProverRequest::Notify(job_id, target, epoch_challenge, pool_address) => {
                             info!("Nofify from Pool Server, job_id: {} target: {}, epoch_number: {}", job_id, target, epoch_challenge.epoch_number());
+                            // terminate previous job
+                            pre_terminator.store(true, Ordering::SeqCst);
+                            let terminator = Arc::new(AtomicBool::new(false));
+                            pre_terminator = terminator.clone();
+
+                            // wait pre job exit.
+                            loop {
+                                if in_process_count.load(Ordering::Relaxed) == 0 {
+                                    break;
+                                }
+                                tokio::time::sleep(Duration::from_millis(5)).await;
+                            }
+
                             for i in 0..thread_pools.len() {
                                 let net_router = net_router.clone();
-
                                 let epoch_challenge = epoch_challenge.clone();
                                 let thread_pool = thread_pools[i as usize].clone();
-                                let total_shares_get = total_shares_get.clone();
-                                trace!("thread pool id {}", i);
+                                let total_solutions_get = total_solutions_get.clone();
+                                let coinbase_puzzle = coinbase_puzzle.clone();
+                                let in_process_count = in_process_count.clone();
+                                let terminator = terminator.clone();
+                                debug!("thread pool id {}", i);
                                 let (router, handler) = oneshot::channel();
 
                                 task::spawn(async move {
                                     let _ = router.send(());
+                                    in_process_count.fetch_add(1, Ordering::SeqCst);
                                     tokio::time::sleep(Duration::from_millis(i as u64 * 200)).await;
-                                    loop {
-                                        let epoch_challenge = epoch_challenge.clone();
-                                        let _thread_pool = thread_pool.clone();
-                                        // let result = task::spawn_blocking(move || {
-                                            //  thread_pool.install(move || {
-                                                loop {
-                                                    tokio::time::sleep(Duration::from_millis(i as u64 * 500)).await;
-                                                    info!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
-                                                    epoch_challenge.epoch_number(), job_id, target,);
 
-                                                    let coinbase_puzzle = CoinbasePuzzle::<N>::load();
+                                    thread_pool.install(move || {
+                                        loop {
+                                            trace!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
+                                            epoch_challenge.epoch_number(), job_id, target,);
 
-                                                    // Construct a prover solution.
-                                                    let prover_solution = match coinbase_puzzle.unwrap().prove(
-                                                        &epoch_challenge,
-                                                        pool_address,
-                                                        rand::thread_rng().gen(),
-                                                        Some(target),
-                                                    ) {
-                                                        Ok(proof) => proof,
-                                                        Err(error) => {
-                                                            warn!("Failed to generate prover solution: {error}");
-                                                            break;
-                                                        }
-                                                    };
+                                            if terminator.load(Ordering::SeqCst) {
+                                                debug!("job_id({job_id}) process({i}) exit.");
+                                                in_process_count.fetch_sub(1, Ordering::SeqCst);
+                                                break;
+                                            }
 
-                                                    // Fetch the prover solution target.
-                                                    let prover_solution_target = match prover_solution.to_target() {
-                                                        Ok(target) => target,
-                                                        Err(error) => {
-                                                            warn!("Failed to fetch prover solution target: {error}");
-                                                            break;
-                                                        }
-                                                    };
+                                            // Construct a prover solution.
+                                            let prover_solution = match coinbase_puzzle.prove(
+                                                &epoch_challenge,
+                                                pool_address,
+                                                rand::thread_rng().gen(),
+                                                Some(target),
+                                            ) {
+                                                Ok(proof) => proof,
+                                                Err(error) => {
+                                                    trace!("Failed to generate prover solution: {error}");
+                                                    total_solutions_get.fetch_add(1, Ordering::SeqCst);
+                                                    continue;
+                                                }
+                                            };
 
-                                                    // Ensure that the prover solution target is sufficient.
-                                                    match prover_solution_target >= target {
-                                                        true => {
-                                                            info!("Found a Solution (Proof Target {}, Target {})",prover_solution_target, target);
-                                                            // Send solution to the pool server.
-                                                            let message = NetRequest::Submit(job_id, address, Data::Object(prover_solution));
-                                                            if let Err(error) = net_router.send(message).await {
-                                                                error!("[Submit to Pool Server] {}", error);
-                                                            }
-                                                            total_shares_get.fetch_add(1, Ordering::SeqCst);
-                                                            break;
-                                                        }
-                                                        false => trace!(
-                                                            "Prover solution was below the necessary proof target ({prover_solution_target} < {target})"
-                                                        ),
+                                            // Fetch the prover solution target.
+                                            let prover_solution_target = match prover_solution.to_target() {
+                                                Ok(target) => target,
+                                                Err(error) => {
+                                                    warn!("Failed to fetch prover solution target: {error}");
+                                                    total_solutions_get.fetch_add(1, Ordering::SeqCst);
+                                                    continue;
+                                                }
+                                            };
+
+                                            // Ensure that the prover solution target is sufficient.
+                                            match prover_solution_target >= target {
+                                                true => {
+                                                    info!("job_id({job_id}) Found a Solution (Proof Target {}, Target {})",prover_solution_target, target);
+                                                    // Send solution to the pool server.
+                                                    let message = NetRequest::Submit(job_id, address, Data::Object(prover_solution));
+                                                    if let Err(error) = futures::executor::block_on(net_router.send(message)) {
+                                                        error!("[Submit to Pool Server] {}", error);
                                                     }
                                                 }
-                                    }
+                                                false => trace!(
+                                                    "Prover solution was below the necessary proof target ({prover_solution_target} < {target})"
+                                                ),
+                                            }
+                                            // fetch_add every solution
+                                            total_solutions_get.fetch_add(1, Ordering::SeqCst);
+                                        }
+                                    });
                                 });
                                 let _ = handler.await;
                             }
                         }
+                        ProverRequest::TerminateJob => pre_terminator.store(true, Ordering::SeqCst),
                         ProverRequest::Exit => return,
                     }
                 }
             }
         });
 
-        self.print_hash_rate(total_shares.clone()).await;
+        self.print_hash_rate(total_solutions.clone()).await;
 
         let _ = handler.await;
         Ok(())
     }
 
-    pub async fn print_hash_rate(&self, total_shares_cal: Arc<AtomicU32>) {
+    pub async fn print_hash_rate(&self, total_solutions: Arc<AtomicU32>) {
         task::spawn(async move {
             fn calculate_hash_rate(now: u32, past: u32, interval: u32) -> Box<str> {
                 if interval < 1 {
@@ -298,7 +331,7 @@ impl Worker {
             let mut log = VecDeque::<u32>::from(vec![0; 60]);
             loop {
                 tokio::time::sleep(Duration::from_secs(60)).await;
-                let shares = total_shares_cal.load(Ordering::SeqCst);
+                let shares = total_solutions.load(Ordering::SeqCst);
                 log.push_back(shares);
                 let m1 = *log.get(59).unwrap_or(&0);
                 let m5 = *log.get(55).unwrap_or(&0);
@@ -339,7 +372,10 @@ impl Worker {
                     return Ok(());
                 }
                 PoolMessageSC::ConnectAck(true, address, worker_id) => {
-                    info!("connect pool success, my worker id: {:?}, {}", worker_id, address);
+                    info!(
+                        "connect pool success, my worker id: {:?}, {}",
+                        worker_id, address
+                    );
                     (worker_id.unwrap(), address)
                 }
                 _ => {
@@ -355,12 +391,12 @@ impl Worker {
         };
 
         loop {
-            info!("tokio::select before io_message_process_loop");
+            trace!("tokio::select before io_message_process_loop");
             tokio::select! {
                 Some(request) = net_handler.recv() => {
                     match request {
                         NetRequest::Submit(job_id, address, prover_solution) => {
-                            info!("NetRequest Submit, job_id {}, address {} ", job_id, address);
+                            trace!("NetRequest Submit, job_id {}, address {} ", job_id, address);
                             let message = PoolMessageCS::Submit(worker_id, job_id, address, prover_solution);
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Submit to Pool Server] {}", error);
@@ -404,6 +440,8 @@ impl Worker {
             }
         }
 
+        // lost connection, terminate current job
+        let _ = prover_router.send(ProverRequest::TerminateJob).await;
         Ok(())
     }
 
@@ -430,9 +468,14 @@ impl Worker {
                 };
 
                 // process net message
-                if Self::io_message_process_loop::<N, TcpStream>(custom_name.clone(), prover_router.clone(), &mut net_handler, stream)
-                    .await
-                    .is_err()
+                if Self::io_message_process_loop::<N, TcpStream>(
+                    custom_name.clone(),
+                    prover_router.clone(),
+                    &mut net_handler,
+                    stream,
+                )
+                .await
+                .is_err()
                 {
                     break;
                 }
@@ -498,13 +541,19 @@ impl Worker {
         Ok(())
     }
 
-    pub async fn reconnect_via_ssl(candidates_pool: Vec<SocketAddr>) -> Result<TlsStream<TcpStream>> {
+    pub async fn reconnect_via_ssl(
+        candidates_pool: Vec<SocketAddr>,
+    ) -> Result<TlsStream<TcpStream>> {
         let mut root_cert_store = rustls::RootCertStore::empty();
         let mut cafile = BufReader::new(File::open("ca.crt")?);
         let certs = rustls_pemfile::certs(&mut cafile)?;
         let trust_anchors = certs.iter().map(|cert| {
             let ta = webpki::TrustAnchor::try_from_cert_der(&cert[..]).unwrap();
-            OwnedTrustAnchor::from_subject_spki_name_constraints(ta.subject, ta.spki, ta.name_constraints)
+            OwnedTrustAnchor::from_subject_spki_name_constraints(
+                ta.subject,
+                ta.spki,
+                ta.name_constraints,
+            )
         });
         root_cert_store.add_server_trust_anchors(trust_anchors);
 
@@ -513,7 +562,8 @@ impl Worker {
             .with_root_certificates(root_cert_store)
             .with_no_client_auth();
 
-        let domain = rustls::ServerName::try_from("sixpool").map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid dnsname"))?;
+        let domain = rustls::ServerName::try_from("sixpool")
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid dnsname"))?;
 
         let connector = TlsConnector::from(Arc::new(config));
         for pool_ip in candidates_pool {
@@ -543,9 +593,11 @@ fn handle_signals<N: Network>(router: (ProverRouter<N>, NetRouter<N>)) {
         let (prover_router, net_router) = router;
         match signal::ctrl_c().await {
             Ok(()) => {
+                let _ = prover_router.send(ProverRequest::TerminateJob).await;
+                tokio::time::sleep(Duration::from_secs(1)).await;
                 let _ = prover_router.send(ProverRequest::Exit).await;
                 let _ = net_router.send(NetRequest::Exit).await;
-                tokio::time::sleep(Duration::from_secs(2)).await;
+                tokio::time::sleep(Duration::from_secs(1)).await;
                 info!("Exit gracefully");
                 std::process::exit(0);
             }
@@ -554,9 +606,34 @@ fn handle_signals<N: Network>(router: (ProverRouter<N>, NetRouter<N>)) {
     });
 }
 
+fn initialize_logger(verbosity: u8) {
+    match verbosity {
+        0 => std::env::set_var("RUST_LOG", "info"),
+        1 => std::env::set_var("RUST_LOG", "debug"),
+        2 | 3 => std::env::set_var("RUST_LOG", "trace"),
+        _ => std::env::set_var("RUST_LOG", "info"),
+    };
+
+    // Filter out undesirable logs.
+    let filter = tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive("mio=off".parse().unwrap())
+        .add_directive("tokio_util=off".parse().unwrap())
+        .add_directive("hyper::proto::h1::conn=off".parse().unwrap())
+        .add_directive("hyper::proto::h1::decode=off".parse().unwrap())
+        .add_directive("hyper::proto::h1::io=off".parse().unwrap())
+        .add_directive("hyper::proto::h1::role=off".parse().unwrap())
+        .add_directive("jsonrpsee=off".parse().unwrap());
+
+    // Initialize tracing.
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(io::stdout().is_tty())
+        .with_target(verbosity == 3)
+        .try_init();
+}
 fn main() -> Result<()> {
     let worker = Worker::from_args();
-    initialize_logger(worker.verbosity, None);
+    initialize_logger(worker.verbosity);
     info!("worker start.");
     let (num_tokio_worker_threads, max_tokio_blocking_threads) = (num_cpus::get(), 1024); // 512 is tokio's current default
 
