@@ -59,16 +59,16 @@ pub enum ProverRequest<N: Network> {
 }
 
 pub enum NetRequest<N: Network> {
-    Submit(u64, Address<N>, Data<ProverSolution<N>>),
+    Submit(u64, Data<ProverSolution<N>>),
     Exit,
 }
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "worker", author = "The zk.work team <zk.work@6block.com>", setting = structopt::clap::AppSettings::ColoredHelp)]
 struct Worker {
-    /// Specify this as a mining node, with the given miner address.
-    #[structopt(long = "address")]
-    pub address: Option<String>,
+    /// Specify this as a mining node, with the given email.
+    #[structopt(long = "email")]
+    pub email: String,
     /// Specify the pool(tcp) that the worker is contributing to.
     #[structopt(long = "tcp_server")]
     pub tcp_servers: Vec<SocketAddr>,
@@ -107,41 +107,35 @@ struct Worker {
 impl Worker {
     // Starts the worker.
     pub async fn start<N: Network>(self) -> Result<()> {
-        let address = match self.address {
-            Some(ref address) => {
-                let address = Address::<N>::from_str(address)?;
-                info!("Worker address is {}\n", address);
-                Some(address)
-            }
-            None => None,
-        };
-        match address {
-            Some(address) => {
-                let (prover_router, prover_handler) = mpsc::channel(1024);
-                let (net_router, net_handler) = mpsc::channel(1024);
-                self.start_prover_process::<N>(address, net_router.clone(), prover_handler)
-                    .await?;
+        if self.email.len() < 3 {
+            return Err(anyhow!("Failed to start worker, too short email "));
+        }
+        if !self.email.as_str().contains("@") {
+            return Err(anyhow!("Failed to start worker, invalid email."));
+        }
 
-                if self.ssl {
-                    self.start_pool_ssl_client::<N>(
-                        self.ssl_servers.clone(),
-                        prover_router.clone(),
-                        net_handler,
-                    )
-                    .await?;
-                } else {
-                    self.start_pool_tcp_client::<N>(
-                        self.tcp_servers.clone(),
-                        prover_router.clone(),
-                        net_handler,
-                    )
-                    .await?;
-                }
+        let (prover_router, prover_handler) = mpsc::channel(1024);
+        let (net_router, net_handler) = mpsc::channel(1024);
+        self.start_prover_process::<N>(net_router.clone(), prover_handler)
+            .await?;
 
-                handle_signals((prover_router, net_router));
-            }
-            None => return Err(anyhow!("Failed to start worker, lose address")),
-        };
+        if self.ssl {
+            self.start_pool_ssl_client::<N>(
+                self.ssl_servers.clone(),
+                prover_router.clone(),
+                net_handler,
+            )
+            .await?;
+        } else {
+            self.start_pool_tcp_client::<N>(
+                self.tcp_servers.clone(),
+                prover_router.clone(),
+                net_handler,
+            )
+            .await?;
+        }
+
+        handle_signals((prover_router, net_router));
 
         // Note: Do not move this. The pending await must be here otherwise
         // other snarkOS commands will not exit.
@@ -151,7 +145,6 @@ impl Worker {
 
     pub async fn start_prover_process<N: Network>(
         &self,
-        address: Address<N>,
         net_router: NetRouter<N>,
         mut prover_handler: ProverHandler<N>,
     ) -> Result<()> {
@@ -286,7 +279,7 @@ impl Worker {
                                                 true => {
                                                     info!("job_id({job_id}) Found a Solution (Proof Target {}, Target {})",prover_solution_target, target);
                                                     // Send solution to the pool server.
-                                                    let message = NetRequest::Submit(job_id, address, Data::Object(prover_solution));
+                                                    let message = NetRequest::Submit(job_id, Data::Object(prover_solution));
                                                     if let Err(error) = futures::executor::block_on(net_router.send(message)) {
                                                         error!("[Submit to Pool Server] {}", error);
                                                     }
@@ -353,6 +346,7 @@ impl Worker {
 
     pub async fn io_message_process_loop<N: Network, T: AsyncRead + AsyncWrite>(
         custom_name: String,
+        email: String,
         prover_router: ProverRouter<N>,
         net_handler: &mut NetHandler<N>,
         stream: T,
@@ -360,18 +354,18 @@ impl Worker {
         let (r, w) = split(stream);
         let mut outboud_socket_w = FramedWrite::new(w, PoolMessageCS::Unused::<N>);
         let mut outbound_socket_r = FramedRead::new(r, PoolMessageSC::Unused::<N>);
-        let message = PoolMessageCS::Connect(0, 1, 0, 0, custom_name);
+        let message = PoolMessageCS::Connect(0, 1, 1, 0, 0, custom_name, email.clone());
         if let Err(error) = outboud_socket_w.send(message).await {
             error!("[Connect pool] {}", error);
             return Ok(());
         }
         let (worker_id, pool_address) = match outbound_socket_r.next().await {
             Some(Ok(message)) => match message {
-                PoolMessageSC::ConnectAck(false, _address, _worker_id) => {
+                PoolMessageSC::ConnectAck(false, _address, _worker_id, _) => {
                     error!("connect pool error, server rejected.");
                     return Ok(());
                 }
-                PoolMessageSC::ConnectAck(true, address, worker_id) => {
+                PoolMessageSC::ConnectAck(true, address, worker_id, _testsignature) => {
                     info!(
                         "connect pool success, my worker id: {:?}, {}",
                         worker_id, address
@@ -395,9 +389,9 @@ impl Worker {
             tokio::select! {
                 Some(request) = net_handler.recv() => {
                     match request {
-                        NetRequest::Submit(job_id, address, prover_solution) => {
-                            trace!("NetRequest Submit, job_id {}, address {} ", job_id, address);
-                            let message = PoolMessageCS::Submit(worker_id, job_id, address, prover_solution);
+                        NetRequest::Submit(job_id, prover_solution) => {
+                            trace!("NetRequest Submit, job_id {}, email {} ", job_id, email);
+                            let message = PoolMessageCS::Submit(worker_id, job_id, prover_solution);
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Submit to Pool Server] {}", error);
                             }
@@ -453,7 +447,7 @@ impl Worker {
     ) -> Result<()> {
         let (router, handler) = oneshot::channel();
         let custom_name = self.custom_name.clone();
-        //E::tasks().append(
+        let email = self.email.clone();
         task::spawn(async move {
             let _ = router.send(());
             loop {
@@ -470,6 +464,7 @@ impl Worker {
                 // process net message
                 if Self::io_message_process_loop::<N, TcpStream>(
                     custom_name.clone(),
+                    email.clone(),
                     prover_router.clone(),
                     &mut net_handler,
                     stream,
@@ -509,7 +504,7 @@ impl Worker {
     ) -> Result<()> {
         let (router, handler) = oneshot::channel();
         let custom_name = self.custom_name.clone();
-        //E::tasks().append(
+        let email = self.email.clone();
         task::spawn(async move {
             let _ = router.send(());
             loop {
@@ -526,6 +521,7 @@ impl Worker {
                 // process net message
                 if Self::io_message_process_loop::<N, TlsStream<TcpStream>>(
                     custom_name.clone(),
+                    email.clone(),
                     prover_router.clone(),
                     &mut net_handler,
                     stream,
