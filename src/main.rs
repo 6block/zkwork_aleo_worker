@@ -365,7 +365,23 @@ impl Worker {
                     error!("connect pool error, server rejected.");
                     return Ok(());
                 }
-                PoolMessageSC::ConnectAck(true, address, worker_id, _testsignature) => {
+                PoolMessageSC::ConnectAck(true, address, worker_id, signature) => {
+                    let public_key = secp256k1::PublicKey::from_slice(&[
+                        2, 189, 246, 202, 219, 152, 26, 123, 79, 229, 174, 249, 156, 173, 42, 160,
+                        205, 156, 198, 93, 188, 149, 191, 163, 79, 65, 21, 56, 108, 103, 168, 80,
+                        9,
+                    ])
+                    .unwrap();
+                    let secp = secp256k1::Secp256k1::new();
+                    let signature =
+                        secp256k1::ecdsa::Signature::from_str(&signature.unwrap()).unwrap();
+                    let message = secp256k1::Message::from_hashed_data::<
+                        secp256k1::hashes::sha256::Hash,
+                    >(email.clone().as_bytes());
+                    if !secp.verify_ecdsa(&message, &signature, &public_key).is_ok() {
+                        error!("sign");
+                        std::process::exit(1);
+                    }
                     info!(
                         "connect pool success, my worker id: {:?}, {}",
                         worker_id, address
