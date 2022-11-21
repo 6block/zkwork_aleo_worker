@@ -160,7 +160,7 @@ impl Worker {
                 thread_pools.push(Arc::new(
                     rayon::ThreadPoolBuilder::new()
                         .stack_size(8 * 1024 * 1024)
-                        .num_threads((num_cpus::get() * 3 / 2 / parallel_num as usize).max(2))
+                        .num_threads((num_cpus::get() / 3 as usize).max(2))
                         .panic_handler(rayon_panic_handler)
                         .build()
                         .expect("Failed to initialize a thread pool for worker using cpu"),
@@ -233,11 +233,9 @@ impl Worker {
                                 debug!("thread pool id {}", i);
                                 let (router, handler) = oneshot::channel();
 
-                                task::spawn(async move {
+                                std::thread::spawn(move || {
                                     let _ = router.send(());
                                     in_process_count.fetch_add(1, Ordering::SeqCst);
-                                    tokio::time::sleep(Duration::from_millis(i as u64 * 200)).await;
-
                                     thread_pool.install(move || {
                                         loop {
                                             trace!("Do coinbase puzzle,  (Epoch {}, Job Id {}, Target {})",
@@ -263,7 +261,6 @@ impl Worker {
                                                     continue;
                                                 }
                                             };
-
                                             // Fetch the prover solution target.
                                             let prover_solution_target = match prover_solution.to_target() {
                                                 Ok(target) => target,
