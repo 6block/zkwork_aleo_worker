@@ -14,7 +14,7 @@ license = "GPL-3.0"
 version = "1.0.0"
 
 [dependencies.zkwork_aleo_protocol]
-version = "0.3.2"
+version = "0.3.3"
 
 [dependencies.tracing]
 version = "0.1"
@@ -102,4 +102,3 @@ lto = "thin"
 incremental = true
 debug = true
 debug-assertions = true
-

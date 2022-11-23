@@ -30,6 +30,7 @@ use std::{
     time::Duration,
 };
 use structopt::StructOpt;
+use tokio::time;
 use tokio::{
     io::{split, AsyncRead, AsyncWrite},
     net::TcpStream,
@@ -196,6 +197,8 @@ impl Worker {
         );
         let total_solutions = Arc::new(AtomicU32::new(0));
         let total_solutions_get = total_solutions.clone();
+        let is_working = Arc::new(AtomicBool::new(false));
+        let is_working_clone = is_working.clone();
 
         let coinbase_puzzle = CoinbasePuzzle::<N>::load().unwrap();
 
@@ -204,12 +207,13 @@ impl Worker {
             let mut pre_terminator = Arc::new(AtomicBool::new(false));
             let in_process_count = Arc::new(AtomicU8::new(0));
             loop {
-                debug!("tokio::select before start_prover_process");
+                trace!("tokio::select before start_prover_process");
                 tokio::select! {
                     Some(request) = prover_handler.recv() => match request {
                         ProverRequest::Notify(job_id, target, epoch_challenge, pool_address) => {
                             info!("Nofify from Pool Server, job_id: {} target: {}, epoch_number: {}", job_id, target, epoch_challenge.epoch_number());
                             // terminate previous job
+                            is_working_clone.store(true, Ordering::SeqCst);
                             pre_terminator.store(true, Ordering::SeqCst);
                             let terminator = Arc::new(AtomicBool::new(false));
                             pre_terminator = terminator.clone();
@@ -293,20 +297,27 @@ impl Worker {
                                 let _ = handler.await;
                             }
                         }
-                        ProverRequest::TerminateJob => pre_terminator.store(true, Ordering::SeqCst),
+                        ProverRequest::TerminateJob => {
+                            is_working_clone.store(false, Ordering::SeqCst);
+                            pre_terminator.store(true, Ordering::SeqCst);
+                        }
                         ProverRequest::Exit => return,
                     }
                 }
             }
         });
 
-        self.print_hash_rate(total_solutions.clone()).await;
+        self.print_hash_rate(total_solutions, is_working).await;
 
         let _ = handler.await;
         Ok(())
     }
 
-    pub async fn print_hash_rate(&self, total_solutions: Arc<AtomicU32>) {
+    pub async fn print_hash_rate(
+        &self,
+        total_solutions: Arc<AtomicU32>,
+        is_working: Arc<AtomicBool>,
+    ) {
         task::spawn(async move {
             fn calculate_hash_rate(now: u32, past: u32, interval: u32) -> Box<str> {
                 if interval < 1 {
@@ -321,6 +332,9 @@ impl Worker {
             let mut log = VecDeque::<u32>::from(vec![0; 60]);
             loop {
                 tokio::time::sleep(Duration::from_secs(60)).await;
+                if !is_working.load(Ordering::Relaxed) {
+                    continue;
+                }
                 let shares = total_solutions.load(Ordering::SeqCst);
                 log.push_back(shares);
                 let m1 = *log.get(59).unwrap_or(&0);
@@ -396,10 +410,18 @@ impl Worker {
             }
             None => return Ok(()),
         };
-
+        let mut timer = time::interval(Duration::from_secs(300));
+        let _ = timer.tick().await;
         loop {
             trace!("tokio::select before io_message_process_loop");
             tokio::select! {
+                _ = timer.tick() => {
+                    debug!("Ping");
+                    let message = PoolMessageCS::Ping;
+                    if let Err(error) = outboud_socket_w.send(message).await {
+                        error!("[Submit to Pool Server] {}", error);
+                    }
+                }
                 Some(request) = net_handler.recv() => {
                     match request {
                         NetRequest::Submit(job_id, prover_solution) => {
@@ -408,6 +430,7 @@ impl Worker {
                             if let Err(error) = outboud_socket_w.send(message).await {
                                 error!("[Submit to Pool Server] {}", error);
                             }
+                            timer.reset();
                         }
                         NetRequest::Exit => {
                             info!("NetRequest Exit");
@@ -434,6 +457,9 @@ impl Worker {
                             PoolMessageSC::ShutDown => {
                                 info!("Pool server shutdown, reconnect...");
                                 break;
+                            }
+                            PoolMessageSC::Pong => {
+                                debug!("Pong");
                             }
                             _ => debug!("unexpected message from pool server."),
                         }
