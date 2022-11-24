@@ -85,9 +85,12 @@ struct Worker {
     /// Specify the custom name of this worker instance.
     #[structopt(default_value = "sixworker", long = "custom_name")]
     pub custom_name: String,
-    /// Specify the parallel number of posw
+    /// Specify the parallel number of process to solve coinbase_puzzle
     #[structopt(default_value = "2", long = "parallel_num")]
     pub parallel_num: u8,
+    /// Specify the threads per coinbase_puzzle solve process, defalut:16
+    #[structopt(default_value = "16", long = "threads")]
+    pub threads: u8,
 
     #[structopt(verbatim_doc_comment)]
     /// Indexes of GPUs to use (starts from 0)
@@ -161,7 +164,7 @@ impl Worker {
                 thread_pools.push(Arc::new(
                     rayon::ThreadPoolBuilder::new()
                         .stack_size(8 * 1024 * 1024)
-                        .num_threads((num_cpus::get() / 3 as usize).max(2))
+                        .num_threads(self.threads.into())
                         .panic_handler(rayon_panic_handler)
                         .build()
                         .expect("Failed to initialize a thread pool for worker using cpu"),
