@@ -1,5 +1,6 @@
 [package]
 name = "zkwork_aleo_worker"
+build = "build.rs"
 version = "0.3.0"
 edition = "2021"
 authors = [ "The zk.work team <zk.work@6block.com>" ]
@@ -74,6 +75,9 @@ version = "0.25.0"
 [dependencies.secp256k1]
 version = "0.24.1"
 features = ["rand", "rand-std", "bitcoin_hashes"]
+
+[build-dependencies.vergen]
+version = "7"
 
 [features]
 enable-cuda = ["snarkvm/cuda"]

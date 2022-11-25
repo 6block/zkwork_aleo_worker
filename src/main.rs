@@ -64,8 +64,11 @@ pub enum NetRequest<N: Network> {
     Exit,
 }
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const GIT_HASH: &str = env!("VERGEN_GIT_SHA_SHORT");
+
 #[derive(StructOpt, Debug)]
-#[structopt(name = "worker", author = "The zk.work team <zk.work@6block.com>", setting = structopt::clap::AppSettings::ColoredHelp)]
+#[structopt(name = "worker", about = GIT_HASH, author = "The zk.work team <zk.work@6block.com>", setting = structopt::clap::AppSettings::ColoredHelp)]
 struct Worker {
     /// Specify this as a mining node, with the given email.
     #[structopt(long = "email")]
@@ -671,10 +674,11 @@ fn initialize_logger(verbosity: u8) {
         .with_timer(time::OffsetTime::local_rfc_3339().expect("could not get local time offset"))
         .try_init();
 }
+
 fn main() -> Result<()> {
     let worker = Worker::from_args();
     initialize_logger(worker.verbosity);
-    info!("worker start.");
+    info!("worker start. version({VERSION}) commit hash({GIT_HASH})");
     let (num_tokio_worker_threads, max_tokio_blocking_threads) = (num_cpus::get(), 1024); // 512 is tokio's current default
 
     // Initialize the runtime configuration.
