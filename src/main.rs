@@ -663,10 +663,12 @@ fn initialize_logger(verbosity: u8) {
         .add_directive("jsonrpsee=off".parse().unwrap());
 
     // Initialize tracing.
+    use tracing_subscriber::fmt::time;
     let _ = tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_ansi(io::stdout().is_tty())
         .with_target(verbosity == 3)
+        .with_timer(time::OffsetTime::local_rfc_3339().expect("could not get local time offset"))
         .try_init();
 }
 fn main() -> Result<()> {

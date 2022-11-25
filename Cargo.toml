@@ -66,6 +66,7 @@ version = "0.8"
 
 [dependencies.tracing-subscriber]
 version = "0.3.16"
+features = ["time", "env-filter", "local-time"]
 
 [dependencies.crossterm]
 version = "0.25.0"
