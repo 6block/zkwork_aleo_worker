@@ -76,6 +76,9 @@ version = "0.25.0"
 version = "0.24.1"
 features = ["rand", "rand-std", "bitcoin_hashes"]
 
+[dependencies.tokio-native-tls]
+version = "0.3.0"
+
 [build-dependencies.vergen]
 version = "7"
 

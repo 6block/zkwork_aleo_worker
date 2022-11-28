@@ -18,9 +18,7 @@ use snarkvm::prelude::*;
 use std::collections::VecDeque;
 use std::{
     any::Any,
-    convert::TryFrom,
-    fs::File,
-    io::{self, BufReader},
+    io,
     net::SocketAddr,
     str::FromStr,
     sync::{
@@ -39,11 +37,7 @@ use tokio::{
     task,
     time::timeout,
 };
-use tokio_rustls::{
-    client::TlsStream,
-    rustls::{self, OwnedTrustAnchor},
-    webpki, TlsConnector,
-};
+use tokio_native_tls::{native_tls, TlsConnector, TlsStream};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite};
 use zkwork_aleo_protocol::message::{Data, PoolMessageCS, PoolMessageSC};
@@ -585,34 +579,21 @@ impl Worker {
     pub async fn reconnect_via_ssl(
         candidates_pool: Vec<SocketAddr>,
     ) -> Result<TlsStream<TcpStream>> {
-        let mut root_cert_store = rustls::RootCertStore::empty();
-        let mut cafile = BufReader::new(File::open("ca.crt")?);
-        let certs = rustls_pemfile::certs(&mut cafile)?;
-        let trust_anchors = certs.iter().map(|cert| {
-            let ta = webpki::TrustAnchor::try_from_cert_der(&cert[..]).unwrap();
-            OwnedTrustAnchor::from_subject_spki_name_constraints(
-                ta.subject,
-                ta.spki,
-                ta.name_constraints,
-            )
-        });
-        root_cert_store.add_server_trust_anchors(trust_anchors);
+        let mut native_tls_builder = native_tls::TlsConnector::builder();
+        native_tls_builder.danger_accept_invalid_certs(true);
+        native_tls_builder.danger_accept_invalid_hostnames(true);
+        native_tls_builder.use_sni(false);
+        let native_tls_connector = native_tls_builder.build().unwrap();
+        let tokio_tls_connector = TlsConnector::from(native_tls_connector);
 
-        let config = rustls::ClientConfig::builder()
-            .with_safe_defaults()
-            .with_root_certificates(root_cert_store)
-            .with_no_client_auth();
-
-        let domain = rustls::ServerName::try_from("sixpool")
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid dnsname"))?;
-
-        let connector = TlsConnector::from(Arc::new(config));
         for pool_ip in candidates_pool {
             match timeout(Duration::from_millis(5000), TcpStream::connect(pool_ip)).await {
                 Ok(stream) => match stream {
                     Ok(stream) => {
                         debug!("tcp link accept by {}", pool_ip);
-                        let stream = connector.connect(domain, stream).await?;
+                        let stream = tokio_tls_connector
+                            .connect(&pool_ip.to_string(), stream)
+                            .await?;
                         debug!("connected to pool ssl://{}", pool_ip);
                         return Ok(stream);
                     }
