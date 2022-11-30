@@ -1,7 +1,7 @@
 [package]
 name = "zkwork_aleo_worker"
 build = "build.rs"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = [ "The zk.work team <zk.work@6block.com>" ]
 homepage = "https://zk.work"
@@ -20,8 +20,9 @@ version = "0.3.3"
 [dependencies.tracing]
 version = "0.1"
 
+[patch.crates-io]
+snarkvm = { git = "https://github.com/AleoHQ/snarkVM.git", branch = "feat/snarkvm-cuda" }
 [dependencies.snarkvm]
-version = "0.9.6"
 
 [dependencies.anyhow]
 version = "1"
