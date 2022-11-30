@@ -20,9 +20,8 @@ version = "0.3.3"
 [dependencies.tracing]
 version = "0.1"
 
-[patch.crates-io]
-snarkvm = { git = "https://github.com/AleoHQ/snarkVM.git", branch = "feat/snarkvm-cuda" }
 [dependencies.snarkvm]
+version = "0.9.6"
 
 [dependencies.anyhow]
 version = "1"
@@ -84,7 +83,7 @@ version = "0.3.0"
 version = "7"
 
 [features]
-enable-cuda = ["snarkvm/cuda"]
+cuda = ["snarkvm/cuda"]
 
 [profile.release]
 opt-level = 3
@@ -111,3 +110,6 @@ lto = "thin"
 incremental = true
 debug = true
 debug-assertions = true
+
+[patch.crates-io]
+snarkvm = { git = "https://github.com/AleoHQ/snarkVM.git", branch = "feat/snarkvm-cuda" }
