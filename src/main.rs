@@ -88,21 +88,6 @@ struct Worker {
     /// Specify the threads per coinbase_puzzle solve process, defalut:16
     #[structopt(default_value = "16", long = "threads")]
     pub threads: u8,
-
-    #[structopt(verbatim_doc_comment)]
-    /// Indexes of GPUs to use (starts from 0)
-    /// Specify multiple times to use multiple GPUs
-    /// Example: -g 0 -g 1 -g 2
-    /// Note: Pure CPU proving will be disabled as each GPU job requires one CPU thread as well
-    #[structopt(short = "g", long = "cuda")]
-    pub cuda: Option<Vec<i16>>,
-
-    #[structopt(verbatim_doc_comment)]
-    /// Parallel jobs per GPU, defaults to 1
-    /// Example: -g 0 -g 1 -j 4
-    /// The above example will result in 8 jobs in total
-    #[structopt(short = "j", long = "cuda-jobs")]
-    pub jobs: Option<u8>,
 }
 
 impl Worker {
@@ -152,48 +137,28 @@ impl Worker {
         let (router, handler) = oneshot::channel();
         let parallel_num = self.parallel_num;
         let mut thread_pools = Vec::new();
-        if self.cuda.clone().is_none() {
-            info!("cuda.is_none {:?}", self.cuda.clone().is_none());
-            for _ in 0..parallel_num {
-                let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
-                    error!("{:?} - just skip", err);
-                };
-                thread_pools.push(Arc::new(
-                    rayon::ThreadPoolBuilder::new()
-                        .stack_size(8 * 1024 * 1024)
-                        .num_threads(self.threads.into())
-                        .panic_handler(rayon_panic_handler)
-                        .build()
-                        .expect("Failed to initialize a thread pool for worker using cpu"),
-                ));
-            }
-        } else {
-            info!(
-                "cuda {:?} cuda_jobs {:?}",
-                self.cuda.clone(),
-                self.jobs.clone().unwrap_or(1)
-            );
-            let total_jobs =
-                self.jobs.clone().unwrap_or(1) * self.cuda.clone().unwrap().len() as u8;
-            for index in 0..total_jobs {
-                let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
-                    error!("{:?} - just skip", err);
-                };
-                thread_pools.push(Arc::new(
-                    rayon::ThreadPoolBuilder::new()
-                        .stack_size(8 * 1024 * 1024)
-                        .num_threads(2)
-                        .panic_handler(rayon_panic_handler)
-                        .thread_name(move |idx| format!("ap-cuda-{}-{}", index, idx))
-                        .build()
-                        .expect("Failed to initialize a thread pool for worker using cuda"),
-                ));
-            }
+        for _ in 0..parallel_num {
+            let rayon_panic_handler = move |err: Box<dyn Any + Send>| {
+                error!("{:?} - just skip", err);
+            };
+            thread_pools.push(Arc::new(
+                rayon::ThreadPoolBuilder::new()
+                    .stack_size(8 * 1024 * 1024)
+                    .num_threads(self.threads.into())
+                    .panic_handler(rayon_panic_handler)
+                    .build()
+                    .expect("Failed to initialize a thread pool for worker using cpu"),
+            ));
         }
+        #[cfg(feature = "cuda")]
         info!(
-            "Created {} prover thread pools and using cuda is {}",
+            "Created {} prover thread pools and using cuda",
             thread_pools.len(),
-            self.cuda.clone().is_some(),
+        );
+        #[cfg(not(feature = "cuda"))]
+        info!(
+            "Created {} prover thread pools and using cpu",
+            thread_pools.len(),
         );
         let total_solutions = Arc::new(AtomicU32::new(0));
         let total_solutions_get = total_solutions.clone();
