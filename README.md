@@ -26,7 +26,7 @@ OPTIONS:
                                          16]
         --verbosity <verbosity>          Specify the verbosity of the node [options: 0, 1, 2, 3] [default: 2]
 ```
-try adjusting the following parameters for best performance，--parallel_num、--threads
+try adjusting the following parameters for best performance，--parallel_num、--threads，“parallel 12 --threads 4“ is recommended. Threads can be adjusted based on different cpus.
 
 # complie
 ## cpu
