@@ -15,13 +15,13 @@ license = "GPL-3.0"
 version = "1.0.0"
 
 [dependencies.zkwork_aleo_protocol]
-version = "0.3.3"
+version = "0.3.6"
 
 [dependencies.tracing]
 version = "0.1"
 
 [dependencies.snarkvm]
-version = "0.9.6"
+version = "0.9.9"
 
 [dependencies.anyhow]
 version = "1"
