@@ -1,11 +1,11 @@
 # zkwork_aleo_worker
 ```shell
-./zkwork_aleo_worker --verbosity 1 --email 215587407@qq.com --tcp_server "36.189.234.195:10001" --ssl_server "36.189.234.195:10002" --custom_name miner_1 --parallel_num 12  --ssl
+./zkwork_aleo_worker --verbosity 1 --email 215587407@qq.com --tcp_server "abcd_test.com:10001" --ssl_server "abcd_test.com:10002" --custom_name miner_1 --parallel_num 12  --ssl
 ```
 ```shell
-worker 0.3.2
+worker 0.3.3
 The zk.work team <zk.work@6block.com>
-bfc6442
+aa51b4b
 
 USAGE:
     zkwork_aleo_worker_gpu [FLAGS] [OPTIONS] --email <email>
