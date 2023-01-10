@@ -19,7 +19,6 @@ use std::collections::VecDeque;
 use std::{
     any::Any,
     io,
-    net::SocketAddr,
     str::FromStr,
     sync::{
         atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering},
@@ -69,10 +68,10 @@ struct Worker {
     pub email: String,
     /// Specify the pool(tcp) that the worker is contributing to.
     #[structopt(long = "tcp_server")]
-    pub tcp_servers: Vec<SocketAddr>,
+    pub tcp_servers: Vec<String>,
     /// Specify the pool(ssl) that the worker is contributing to.
     #[structopt(long = "ssl_server")]
-    pub ssl_servers: Vec<SocketAddr>,
+    pub ssl_servers: Vec<String>,
     /// If the flag is set, the worker will use ssl link.
     #[structopt(long)]
     pub ssl: bool,
@@ -445,7 +444,7 @@ impl Worker {
 
     pub async fn start_pool_tcp_client<N: Network>(
         &self,
-        candidate_pools: Vec<SocketAddr>,
+        candidate_pools: Vec<String>,
         prover_router: ProverRouter<N>,
         mut net_handler: NetHandler<N>,
     ) -> Result<()> {
@@ -484,12 +483,12 @@ impl Worker {
         Ok(())
     }
 
-    pub async fn reconnect_via_tcp(candidates_pool: Vec<SocketAddr>) -> Result<TcpStream> {
-        for pool_ip in candidates_pool {
-            match timeout(Duration::from_millis(5000), TcpStream::connect(pool_ip)).await {
+    pub async fn reconnect_via_tcp(candidates_pool: Vec<String>) -> Result<TcpStream> {
+        for pool_name in candidates_pool {
+            match timeout(Duration::from_millis(5000), TcpStream::connect(pool_name.clone())).await {
                 Ok(stream) => match stream {
                     Ok(stream) => {
-                        debug!("connected to pool tcp://{}", pool_ip);
+                        debug!("connected to pool tcp://{}", pool_name.clone());
                         return Ok(stream);
                     }
                     Err(_error) => continue,
@@ -502,7 +501,7 @@ impl Worker {
 
     pub async fn start_pool_ssl_client<N: Network>(
         &self,
-        candidate_pools: Vec<SocketAddr>,
+        candidate_pools: Vec<String>,
         prover_router: ProverRouter<N>,
         mut net_handler: NetHandler<N>,
     ) -> Result<()> {
@@ -542,7 +541,7 @@ impl Worker {
     }
 
     pub async fn reconnect_via_ssl(
-        candidates_pool: Vec<SocketAddr>,
+        candidates_pool: Vec<String>,
     ) -> Result<TlsStream<TcpStream>> {
         let mut native_tls_builder = native_tls::TlsConnector::builder();
         native_tls_builder.danger_accept_invalid_certs(true);
@@ -551,15 +550,15 @@ impl Worker {
         let native_tls_connector = native_tls_builder.build().unwrap();
         let tokio_tls_connector = TlsConnector::from(native_tls_connector);
 
-        for pool_ip in candidates_pool {
-            match timeout(Duration::from_millis(5000), TcpStream::connect(pool_ip)).await {
+        for pool_name in candidates_pool {
+            match timeout(Duration::from_millis(5000), TcpStream::connect(pool_name.clone())).await {
                 Ok(stream) => match stream {
                     Ok(stream) => {
-                        debug!("tcp link accept by {}", pool_ip);
+                        debug!("tcp link accept by {}", pool_name);
                         let stream = tokio_tls_connector
-                            .connect(&pool_ip.to_string(), stream)
+                            .connect(&pool_name.clone(), stream)
                             .await?;
-                        debug!("connected to pool ssl://{}", pool_ip);
+                        debug!("connected to pool ssl://{}", pool_name.clone());
                         return Ok(stream);
                     }
                     Err(_error) => continue,

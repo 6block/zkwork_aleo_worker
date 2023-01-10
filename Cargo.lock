@@ -1017,9 +1017,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.137"
+version = "0.2.138"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
+checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
 
 [[package]]
 name = "libgit2-sys"
@@ -1242,9 +1242,9 @@ checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 
 [[package]]
 name = "openssl"
-version = "0.10.43"
+version = "0.10.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "020433887e44c27ff16365eaa2d380547a94544ad509aff6eb5b6e3e0b27b376"
+checksum = "29d971fd5722fec23977260f6e81aa67d2f22cadbdc2aa049f1022d9a3be1566"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -1274,9 +1274,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.78"
+version = "0.9.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07d5c8cb6e57b3a3612064d7b18b117912b4ce70955c2504d4b741c9e244b132"
+checksum = "5454462c0eced1e97f2ec09036abc8da362e66802f66fd20f86854d9d8cbcbc4"
 dependencies = [
  "autocfg",
  "cc",
@@ -1751,18 +1751,18 @@ checksum = "e25dfac463d778e353db5be2449d1cce89bd6fd23c9f1ea21310ce6e5a1b29c4"
 
 [[package]]
 name = "serde"
-version = "1.0.148"
+version = "1.0.149"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e53f64bb4ba0191d6d0676e1b141ca55047d83b74f5607e6d8eb88126c52c2dc"
+checksum = "256b9932320c590e707b94576e3cc1f7c9024d0ee6612dfbcf1cb106cbe8e055"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.148"
+version = "1.0.149"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a55492425aa53521babf6137309e7d34c20bbfbbfcfe2c7f3a047fd1f6b92c0c"
+checksum = "b4eae9b04cbffdfd550eb462ed33bc6a1b68c935127d008b27444d08380f94e4"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -1859,8 +1859,8 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 
 [[package]]
 name = "snarkvm"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "anyhow",
  "clap 3.2.23",
@@ -1872,13 +1872,13 @@ dependencies = [
  "rayon",
  "self_update",
  "serde_json",
- "snarkvm-algorithms 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-algorithms 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "snarkvm-circuit",
  "snarkvm-console",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-parameters 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-parameters 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "snarkvm-synthesizer",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
  "ureq",
  "walkdir",
@@ -1886,9 +1886,9 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-algorithms"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab6f17a3bfcc5ef54e923cb69b64c1270d6ef2a51293977e98024664e791e0b0"
+checksum = "44717bf78752fe98f0e4228743d9384cb0abc30bf025b9d844c737b378976a3b"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -1903,18 +1903,18 @@ dependencies = [
  "serde",
  "sha2",
  "smallvec",
- "snarkvm-curves 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-fields 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-parameters 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-r1cs 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-utilities 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-curves 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-fields 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-parameters 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-r1cs 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-algorithms"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -1930,18 +1930,18 @@ dependencies = [
  "sha2",
  "smallvec",
  "snarkvm-cuda",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-parameters 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-r1cs 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-parameters 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-r1cs 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-circuit"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-account",
  "snarkvm-circuit-algorithms",
@@ -1954,8 +1954,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-account"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-algorithms",
  "snarkvm-circuit-network",
@@ -1965,18 +1965,18 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-algorithms"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-types",
  "snarkvm-console-algorithms",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-circuit-collections"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-algorithms",
  "snarkvm-circuit-types",
@@ -1985,8 +1985,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-environment"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "indexmap",
  "itertools",
@@ -1995,21 +1995,21 @@ dependencies = [
  "once_cell",
  "snarkvm-circuit-environment-witness",
  "snarkvm-console-network",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-r1cs 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-r1cs 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-circuit-environment-witness"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 
 [[package]]
 name = "snarkvm-circuit-network"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-algorithms",
  "snarkvm-circuit-collections",
@@ -2019,21 +2019,21 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-program"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-account",
  "snarkvm-circuit-collections",
  "snarkvm-circuit-network",
  "snarkvm-circuit-types",
  "snarkvm-console-program",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-circuit-types"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-address",
@@ -2047,8 +2047,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-address"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2060,8 +2060,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-boolean"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-console-types-boolean",
@@ -2069,8 +2069,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-field"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2079,8 +2079,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-group"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2091,8 +2091,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-integers"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2102,8 +2102,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-scalar"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2113,8 +2113,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-string"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2125,8 +2125,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-account",
  "snarkvm-console-algorithms",
@@ -2138,8 +2138,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-account"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "bs58",
  "snarkvm-console-network",
@@ -2148,20 +2148,20 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-algorithms"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "blake2s_simd",
  "smallvec",
  "snarkvm-console-types",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-console-collections"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "rayon",
@@ -2171,8 +2171,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-network"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "anyhow",
  "indexmap",
@@ -2181,21 +2181,21 @@ dependencies = [
  "once_cell",
  "paste",
  "serde",
- "snarkvm-algorithms 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-algorithms 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "snarkvm-console-algorithms",
  "snarkvm-console-collections",
  "snarkvm-console-network-environment",
  "snarkvm-console-types",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-parameters 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-parameters 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-console-network-environment"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "anyhow",
  "bech32",
@@ -2204,15 +2204,15 @@ dependencies = [
  "num-traits",
  "rand",
  "serde",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
 ]
 
 [[package]]
 name = "snarkvm-console-program"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "enum_index",
  "enum_index_derive",
@@ -2229,8 +2229,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-address",
@@ -2244,8 +2244,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-address"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2255,16 +2255,16 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-boolean"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
 ]
 
 [[package]]
 name = "snarkvm-console-types-field"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2272,8 +2272,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-group"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2283,8 +2283,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-integers"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2293,8 +2293,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-scalar"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2303,8 +2303,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-string"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2315,7 +2315,7 @@ dependencies = [
 [[package]]
 name = "snarkvm-cuda"
 version = "0.9.8"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "blst",
  "cc",
@@ -2325,36 +2325,36 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-curves"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29cd683c142fe10686a0cfedcd22d262ce3f442843e9cf124b4802d394055361"
+checksum = "4362d677bc2eb36077fb884cb39dfac2a0c03f86cb548b5e0439848bcc0e3d8e"
 dependencies = [
  "rand",
  "rustc_version",
  "serde",
- "snarkvm-fields 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-utilities 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-fields 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-curves"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "rand",
  "rustc_version",
  "serde",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-fields"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c63451df92ff0a741a22affdea8057d2c15017fc1f987eba141b7e9cd1cbdf28"
+checksum = "1cc2ff7e15862dc0cbf2891616433a0b823d4bbcafae1e0c35d5dd11ee14e8a5"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2364,14 +2364,14 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "snarkvm-utilities 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-fields"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2381,15 +2381,15 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-parameters"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80a66dc87a7453b1d1cf6ca4f8aee71b5feb913af592da783b26af696fbde3f6"
+checksum = "67857e7df8f2a5bdfbed6dde7e58295b01e51fe1258ebb6b6e52642df75e8d81"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2406,15 +2406,15 @@ dependencies = [
  "rand",
  "serde_json",
  "sha2",
- "snarkvm-curves 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-utilities 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-curves 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-parameters"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2431,48 +2431,48 @@ dependencies = [
  "rand",
  "serde_json",
  "sha2",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-r1cs"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79f6b98f5f09c8bfff3206ba885a5698ebb196bfc8ed7a331094c1dc6823edbe"
+checksum = "77a734842ac8c5e994745034c6f83aaf324c3a091d830669e79bb056514f11aa"
 dependencies = [
  "anyhow",
  "cfg-if",
  "fxhash",
  "indexmap",
  "itertools",
- "snarkvm-curves 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-fields 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "snarkvm-utilities 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-curves 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-fields 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-r1cs"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "anyhow",
  "cfg-if",
  "fxhash",
  "indexmap",
  "itertools",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-synthesizer"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2487,20 +2487,20 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "snarkvm-algorithms 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-algorithms 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "snarkvm-circuit",
  "snarkvm-console",
- "snarkvm-curves 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-fields 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
- "snarkvm-utilities 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-curves 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-fields 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "tracing",
 ]
 
 [[package]]
 name = "snarkvm-utilities"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a27308001f04a0ceb0a22f68abd4ed1bace6536f2aea5f6a75ffe044884f1093"
+checksum = "10add1d9b3c360603461a9974714f7e0942280cc72df28edfe6f4f0a2b2b82d1"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2511,14 +2511,14 @@ dependencies = [
  "rand_xorshift",
  "rayon",
  "serde",
- "snarkvm-utilities-derives 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-utilities-derives 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-utilities"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2529,15 +2529,15 @@ dependencies = [
  "rand_xorshift",
  "rayon",
  "serde",
- "snarkvm-utilities-derives 0.9.9 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
+ "snarkvm-utilities-derives 0.9.10 (git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda)",
  "thiserror",
 ]
 
 [[package]]
 name = "snarkvm-utilities-derives"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d85ab3a492f904c732fd1e108742c53c4a8601683f2f505d256887db1079cb9c"
+checksum = "64872cc1fb4e8304881ce6838f2b2115ed82df3983e8b19ea639bbb2183f540e"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -2546,8 +2546,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-utilities-derives"
-version = "0.9.9"
-source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#dafd8cc08196043c7eca11525786b978ce3f8606"
+version = "0.9.10"
+source = "git+https://github.com/AleoHQ/snarkVM.git?branch=feat/snarkvm-cuda#daa27e5aa1ce71a0c9d82711dcffb09f56a04808"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -2821,9 +2821,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.22.0"
+version = "1.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d76ce4a75fb488c605c54bf610f221cea8b0dafb53333c1a67e8ee199dcd2ae3"
+checksum = "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46"
 dependencies = [
  "autocfg",
  "bytes",
@@ -2835,7 +2835,7 @@ dependencies = [
  "signal-hook-registry",
  "socket2",
  "tokio-macros",
- "winapi",
+ "windows-sys 0.42.0",
 ]
 
 [[package]]
@@ -2973,9 +2973,9 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 
 [[package]]
 name = "typenum"
-version = "1.15.0"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
+checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "unicode-bidi"
@@ -3419,7 +3419,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snarkvm",
- "snarkvm-algorithms 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "snarkvm-algorithms 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt",
  "tokio",
  "tokio-util",
@@ -3429,7 +3429,7 @@ dependencies = [
 
 [[package]]
 name = "zkwork_aleo_worker"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "bytes",
