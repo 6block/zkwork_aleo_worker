@@ -21,7 +21,7 @@ version = "0.3.6"
 version = "0.1"
 
 [dependencies.snarkvm]
-version = "0.9.9"
+version = "0.9.11"
 
 [dependencies.anyhow]
 version = "1"
@@ -73,7 +73,7 @@ features = ["time", "env-filter", "local-time"]
 version = "0.25.0"
 
 [dependencies.secp256k1]
-version = "0.24.1"
+version = "0.25.0"
 features = ["rand", "rand-std", "bitcoin_hashes"]
 
 [dependencies.tokio-native-tls]
@@ -112,4 +112,4 @@ debug = true
 debug-assertions = true
 
 [patch.crates-io]
-snarkvm = { git = "https://github.com/AleoHQ/snarkVM.git", branch = "feat/snarkvm-cuda" }
+snarkvm = { git = "https://github.com/AleoHQ/snarkVM.git", branch = "testnet3" }
