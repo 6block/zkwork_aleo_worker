@@ -3,10 +3,10 @@
 tcp_server=36.189.234.195:10003
 ssl_server=36.189.234.195:10004
 reward_address=aleo1xxx...
-./zkwork_aleo_worker --address $reward_address --tcp_server $tcp_server --verbosity 1 --parallel_num 16 --custom_name "myworker1" --threads 1
+./zkwork_aleo_worker --address $reward_address --tcp_server $tcp_server --verbosity 1 --custom_name "myworker1"
 ```
 ```shell
-worker 0.4.0
+worker 0.4.2
 The zk.work team <zk.work@6block.com>
 0ca5f69
 
@@ -25,11 +25,10 @@ OPTIONS:
                                          2]
         --ssl_server <ssl-servers>...    Specify the pool(ssl) that the worker is contributing to
         --tcp_server <tcp-servers>...    Specify the pool(tcp) that the worker is contributing to
-        --threads <threads>              Specify the threads per coinbase_puzzle solve process, defalut:16 [default:
-                                         16]
+        --threads <threads>              Specify the threads per coinbase_puzzle solve process, defalut:1 [default:
+                                         1]
         --verbosity <verbosity>          Specify the verbosity of the node [options: 0, 1, 2, 3] [default: 2]
 ```
-Try adjusting the following parameters for best performance, `--parallel_num` and `--threads`. The recommended values are `--parallel_num 2*cpu-cores --threads 1`.
 
 # complie
 ```shell
