@@ -14,6 +14,7 @@ extern crate tracing;
 use anyhow::{anyhow, Result};
 use crossterm::tty::IsTty;
 use futures::SinkExt;
+use once_cell::sync::Lazy;
 use snarkvm::{
     ledger::narwhal::Data,
     prelude::{puzzle::Solution, store::ConsensusStorage, Network, *},
@@ -63,6 +64,8 @@ pub enum NetRequest<N: Network> {
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const GIT_HASH: &str = env!("VERGEN_GIT_SHA_SHORT");
 
+static DEFAULT_PARALLEL: Lazy<String> = Lazy::new(|| (num_cpus::get() * 2).to_string());
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "worker", about = GIT_HASH, author = "The zk.work team <zk.work@6block.com>", setting = structopt::clap::AppSettings::ColoredHelp)]
 struct Worker {
@@ -85,10 +88,10 @@ struct Worker {
     #[structopt(default_value = "sixworker", long = "custom_name")]
     pub custom_name: String,
     /// Specify the parallel number of process to solve coinbase_puzzle
-    #[structopt(default_value = "2", long = "parallel_num")]
+    #[structopt(default_value = &DEFAULT_PARALLEL, long = "parallel_num")]
     pub parallel_num: u16,
     /// Specify the threads per coinbase_puzzle solve process, defalut:16
-    #[structopt(default_value = "16", long = "threads")]
+    #[structopt(default_value = "1", long = "threads")]
     pub threads: u8,
 }
 

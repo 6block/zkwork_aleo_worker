@@ -3917,6 +3917,7 @@ dependencies = [
  "crossterm",
  "futures",
  "num_cpus",
+ "once_cell",
  "rand",
  "rayon",
  "rustls-pemfile",
