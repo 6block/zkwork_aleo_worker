@@ -38,7 +38,8 @@ We have tested `f3-prover 1.4.5` and `zkwork_aleo_worker v0.4.2` in same env,
 ## Download
 
 - CPU prover: wget https://github.com/6block/zkwork_aleo_worker/releases/download/v0.4.2/zkwork-0.4.2-ub20-cpu.tar.gz
-- GPU prover: wget https://github.com/6block/zkwork_aleo_worker/releases/download/v0.4.2/zkwork-0.4.2-ub20-gpu.tar.gz
+- GPU prover: wget https://github.com/6block/zkwork_aleo_worker/releases/download/v0.4.3/zkwork-0.4.3-ub20-gpu.tar.gz
+- GPU prover: wget https://github.com/6block/zkwork_aleo_worker/releases/download/v0.4.3/zkwork-0.4.3-ub22-gpu.tar.gz
 
 ## Requirements
 
@@ -47,7 +48,7 @@ We have tested `f3-prover 1.4.5` and `zkwork_aleo_worker v0.4.2` in same env,
 ## Usage 
 
 ```shell
-worker 0.4.2
+worker 0.4.3
 The zk.work team <zk.work@6block.com>
 0ca5f69
 
@@ -69,6 +70,7 @@ OPTIONS:
         --threads <threads>              Specify the threads per coinbase_puzzle solve process, defalut:1 [default:
                                          1]
         --verbosity <verbosity>          Specify the verbosity of the node [options: 0, 1, 2, 3] [default: 2]
+        -g, --gpu_index <GPU_INDEXES>    Specify gpu index to solve puzzle, all gpus are used by default, eg. -g 0 -g 1 -g 2 ...
 ```
 
 ## License
