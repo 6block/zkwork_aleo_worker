@@ -8,6 +8,8 @@ reward_address=aleo1xxx...
 
 ## GPU Performance 
 
+### zkwork_aleo_worker v0.4.2
+
 We have tested `f3-prover 1.4.5` and `zkwork_aleo_worker v0.4.2` in same env,
 - 1 * `AMD EPYC 7352 24-Core Processor`
 - 1 * `NVIDIA GeForce RTX 3090`
@@ -31,6 +33,35 @@ We have tested `f3-prover 1.4.5` and `zkwork_aleo_worker v0.4.2` in same env,
    <td>zkwork-aleo-worker v0.4.2
    </td>
    <td>1476.43
+   </td>
+  </tr>
+</table>
+
+### zkwork_aleo_worker v0.4.3
+
+We have tested `h9 v2.0.1-4` and `zkwork_aleo_worker v0.4.3` in same env,
+- 2 * `AMD EPYC 7543 32-Core Processor`
+- 8 * `NVIDIA GeForce RTX 3080`
+- epoch 792
+- epoch hash: `ab1eqgz5t874l822e26h9egnz37kx85ufgw30u9w3urzzaas6qg55gqdtzhay`
+  
+<table>
+  <tr>
+   <td><strong>Name & Version</strong>
+   </td>
+   <td><strong>Performance</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>h9 v2.0.1-4
+   </td>
+   <td>3383
+   </td>
+  </tr>
+  <tr>
+   <td>zkwork-aleo-worker v0.4.3
+   </td>
+   <td>4620
    </td>
   </tr>
 </table>
